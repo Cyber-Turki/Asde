@@ -37,6 +37,22 @@ there ([[new-page]]).
 
 <!-- Log this project's changes below, newest first, under a `## YYYY-MM-DD` heading. -->
 
+## 2026-09-24 — ARTEFAKT single-file reference page
+
+- **`public/artefakt/index.html`** — a self-contained, hand-written reproduction
+  of the ARTEFAKT outerwear page from its one-file spec, served statically at
+  `/artefakt/index.html`. It is a reference artefact, not part of the store:
+  plain HTML/CSS/JS, no framework, no build step. three.js 0.185.0 and Lenis
+  1.3.26 load through an import map from jsDelivr; images, the 3D model and the
+  3270 font come from the spec's asset bucket.
+- It deliberately does not follow the starter's rules (no tokens tiers, no
+  spring components, `lang="en"`, LTR) — it lives outside `src/` so `verify.sh`,
+  lint and the Next build ignore it. Do not import from it.
+- Verified in headless Chromium with the CDN and bucket stubbed locally (both
+  are unreachable from the build environment): no console errors, no horizontal
+  overflow, preloader gated on real readiness, reduced-motion and no-WebGL
+  fallbacks exercised.
+
 ## 2026-09-24 — الخليج storefront built on the starter
 
 - **The home view is no longer empty.** Five screens adapted from a one-page

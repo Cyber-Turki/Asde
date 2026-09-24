@@ -1,0 +1,1968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARTEFAKT — Technical Outerwear</title>
+<meta name="description" content="ARTEFAKT. Weather-resistant. Thermal insulation. Oversized fit. Limited quantity.">
+<meta name="theme-color" content="#000000">
+<script type="importmap">
+{"imports":{
+  "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/",
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.mjs"
+}}
+</script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARTEFAKT — single file. Two layouts: the 1440×800 artboard ("frame") at
+   and above the frame breakpoint, ordinary responsive flow below it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: "3270";
+  src: url("https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/fonts/3270-Regular.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+:root {
+  --hero-surface: #000000;
+  --hero-surface-lattice: #0d0d0d;
+  --hero-content: #ffffff;
+  --hero-content-muted: rgb(255 255 255 / 0.4);
+  --hero-content-faint: rgb(255 255 255 / 0.25);
+  --hero-rule: rgb(255 255 255 / 0.25);
+
+  --text-caption: max(0.75rem, 12px);
+  --text-body: max(1.125rem, 12px);
+  --text-lede: 1.25rem;
+  --text-fine: max(0.8125rem, 12px);
+  --text-chip: max(0.875rem, 12px);
+  --text-title: 1.625rem;
+  --text-display: 2.5rem;
+
+  --lattice-pitch: 0.625rem;
+  --lattice-gap: 0.125rem;
+  --lattice-offset: calc(var(--lattice-gap) / -2);
+  --lattice-reach: 12rem;
+  --stage-fade: 17rem;
+
+  --pointer-x: -100vw;
+  --pointer-y: -100vh;
+  --pointer-lag-x: -100vw;
+  --pointer-lag-y: -100vh;
+
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-entrance: cubic-bezier(0.2, 0, 0, 1);
+
+  --margin: 2.5rem;
+  --screen: 50rem;
+}
+@media (min-width: 640px) { :root { --text-display: 3.125rem; } }
+
+/* The lattice must land on whole device pixels or the fractional pitch
+   antialiases on a three-cell beat and ripples when anything moves. */
+@supports (width: round(1px, 1px)) {
+  :root {
+    --lattice-pitch: round(0.625rem, 1px);
+    --lattice-gap: round(0.125rem, 1px);
+    --lattice-offset: round(calc(var(--lattice-gap) / -2), 1px);
+  }
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  background-color: #000;
+  /* The root scale is bound by whichever axis runs out first. */
+  font-size: min(1.111111vw, 2lvh);
+  -webkit-text-size-adjust: 100%;
+}
+@media (max-width: 1023.98px), (max-aspect-ratio: 0.9999/1) {
+  html { font-size: 16px; }
+}
+body {
+  margin: 0;
+  font-family: "3270", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-body);
+  line-height: 1.1;
+  color: var(--hero-content);
+  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-transform: inherit; }
+img, svg, canvas { display: block; }
+ul, ol { list-style: none; margin: 0; padding: 0; }
+h1, h2, h3, p, dl, dd, figure { margin: 0; font-weight: 400; }
+b { font-weight: 400; }
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.skip-link { position: fixed; top: 1rem; left: 1rem; z-index: 200; padding: 0.75rem 1rem; background: var(--hero-surface-lattice); border: 1px solid var(--hero-rule); transform: translateY(-300%); }
+.skip-link:focus { transform: none; }
+.keep-case { text-transform: none; }
+.tabular { font-variant-numeric: tabular-nums; }
+.frame-only { display: none; }
+.flow-only { display: revert; }
+
+/* ── The lattice ──────────────────────────────────────────────────────── */
+.lattice-shell {
+  position: relative;
+  min-height: 100lvh;
+  overflow-x: clip;
+  background-color: var(--hero-surface-lattice);
+}
+/* FIRST in the tree: the pointer highlight, fixed. */
+.lattice-beam {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle var(--lattice-reach) at var(--pointer-x) var(--pointer-y),
+      rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.055) 26%,
+      rgb(255 255 255 / 0.034) 52%, rgb(255 255 255 / 0.016) 74%,
+      rgb(255 255 255 / 0.005) 89%, transparent 100%),
+    radial-gradient(circle calc(var(--lattice-reach) * 1.75) at var(--pointer-x) var(--pointer-y),
+      rgb(255 255 255 / 0.017) 0%, rgb(255 255 255 / 0.009) 48%, transparent 100%),
+    radial-gradient(circle calc(var(--lattice-reach) * 1.2) at var(--pointer-lag-x) var(--pointer-lag-y),
+      rgb(255 255 255 / 0.032) 0%, rgb(255 255 255 / 0.014) 52%, transparent 100%);
+}
+@media (hover: none) and (pointer: coarse) { .lattice-beam { display: none; } }
+/* SECOND in the tree: the bars, painted over the light. */
+.lattice-bars {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch)),
+    repeating-linear-gradient(to bottom, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch));
+  background-position: var(--lattice-offset) var(--lattice-offset);
+}
+.header-wrap, .site-main, .site-footer { position: relative; z-index: 1; }
+
+/* Opaque lattice panel: knocks out whatever runs behind it, lit in phase
+   with the page. Never on an element that carries a transform. */
+.lattice-panel {
+  background-color: var(--hero-surface-lattice);
+  background-image:
+    repeating-linear-gradient(to right, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch)),
+    repeating-linear-gradient(to bottom, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch)),
+    radial-gradient(circle var(--lattice-reach) at var(--pointer-x) var(--pointer-y),
+      rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.055) 26%,
+      rgb(255 255 255 / 0.034) 52%, rgb(255 255 255 / 0.016) 74%,
+      rgb(255 255 255 / 0.005) 89%, transparent 100%),
+    radial-gradient(circle calc(var(--lattice-reach) * 1.75) at var(--pointer-x) var(--pointer-y),
+      rgb(255 255 255 / 0.017) 0%, rgb(255 255 255 / 0.009) 48%, transparent 100%),
+    radial-gradient(circle calc(var(--lattice-reach) * 1.2) at var(--pointer-lag-x) var(--pointer-lag-y),
+      rgb(255 255 255 / 0.032) 0%, rgb(255 255 255 / 0.014) 52%, transparent 100%);
+  background-position: var(--lattice-offset) var(--lattice-offset), var(--lattice-offset) var(--lattice-offset), 0 0, 0 0, 0 0;
+  background-attachment: scroll, scroll, fixed, fixed, fixed;
+}
+/* Plain lattice: cells and bars, no light — the preloader and transformed panels. */
+.lattice-plain {
+  background-color: var(--hero-surface-lattice);
+  background-image:
+    repeating-linear-gradient(to right, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch)),
+    repeating-linear-gradient(to bottom, #000 0 var(--lattice-gap), transparent var(--lattice-gap) var(--lattice-pitch));
+  background-position: var(--lattice-offset) var(--lattice-offset);
+}
+
+/* ── Type roles ───────────────────────────────────────────────────────── */
+.display { font-size: var(--text-display); line-height: 0.8; letter-spacing: -0.02em; text-box: trim-both cap alphabetic; }
+.lede { font-size: var(--text-lede); line-height: 1.1; }
+.muted { color: var(--hero-content-muted); }
+.faint { color: var(--hero-content-faint); }
+.caption { font-size: var(--text-caption); letter-spacing: -0.02em; line-height: 1.1; }
+.index { font-size: var(--text-caption); color: var(--hero-content-faint); letter-spacing: -0.02em; }
+
+/* Entrances: hidden until the spring brings them in. */
+[data-enter]:not(.is-entered) { opacity: 0; }
+
+/* ── Decoder ──────────────────────────────────────────────────────────── */
+.decode-glyphs { white-space: pre-wrap; }
+
+/* ── Asset failure banner ─────────────────────────────────────────────── */
+.asset-errors { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 150; background: var(--hero-surface); padding: 0.75rem 1rem; border: 1px solid #ff5a5a; color: #ff9a9a; font-size: var(--text-caption); text-transform: none; }
+.asset-errors[hidden] { display: none; }
+.asset-errors p { margin: 0; word-break: break-all; }
+
+/* ── The bracketed button ─────────────────────────────────────────────── */
+.cta {
+  position: relative; display: inline-flex; align-items: center; gap: 2rem;
+  height: 2.875rem; padding-inline: 1.25rem;
+  border: 1px solid #fff; font-size: var(--text-lede); line-height: 1; white-space: nowrap;
+}
+.cta:focus-visible { outline: none; }
+@media (forced-colors: active) { .cta:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; } }
+.cta .arrow { width: 0.625rem; height: 0.375rem; transition: transform var(--duration-fast) var(--ease-entrance); }
+.cta:hover .arrow { transform: translateX(4px); }
+.cta .bk {
+  position: absolute; width: 0.625rem; height: 0.625rem; pointer-events: none; opacity: 0;
+  border: 0 solid #fff;
+  transition: opacity var(--duration-normal) var(--ease-entrance), transform var(--duration-normal) var(--ease-entrance);
+}
+.cta .bk-tl { top: -0.75rem; left: -0.75rem; border-top-width: 1px; border-left-width: 1px; transform: translate(-4px, -4px); }
+.cta .bk-tr { top: -0.75rem; right: -0.75rem; border-top-width: 1px; border-right-width: 1px; transform: translate(4px, -4px); }
+.cta .bk-bl { bottom: -0.75rem; left: -0.75rem; border-bottom-width: 1px; border-left-width: 1px; transform: translate(-4px, 4px); }
+.cta .bk-br { bottom: -0.75rem; right: -0.75rem; border-bottom-width: 1px; border-right-width: 1px; transform: translate(4px, 4px); }
+.cta:hover .bk, .cta:focus-visible .bk { opacity: 1; transform: translate(0, 0); }
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.header-wrap { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--hero-rule); }
+.site-header { position: relative; display: flex; align-items: center; justify-content: space-between; height: 5rem; padding: 0 1.25rem; }
+.logo { display: block; }
+.logo img { width: 1.875rem; height: 4.6875rem; }
+.site-header .logo img { width: 1.5rem; height: 3.75rem; }
+.site-nav { display: none; }
+.cart { line-height: 0.9; }
+.hamburger { display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; }
+.hamburger span { display: block; width: 1.25rem; height: 1px; background: #fff; box-shadow: 0 -6px 0 #fff, 0 6px 0 #fff; }
+.mobile-panel { position: fixed; inset: 0; z-index: 60; display: none; flex-direction: column; padding: 1.5rem 1.25rem; }
+.mobile-panel.is-open { display: flex; }
+.mobile-panel .close { align-self: flex-end; width: 2.75rem; height: 2.75rem; display: flex; align-items: center; justify-content: center; }
+.mobile-panel ul { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; font-size: var(--text-title); }
+.mobile-panel .sub { padding-left: 1.5rem; font-size: var(--text-body); color: var(--hero-content-muted); display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+
+.nav-group { position: relative; padding-bottom: 1rem; margin-bottom: -1rem; }
+.nav-group > button { position: relative; width: 7.4375rem; text-align: left; line-height: 0.9; }
+.nav-group .caret { position: absolute; right: 0; top: 50%; width: 0.375rem; height: 0.3125rem; margin-top: -0.15625rem; transition: transform var(--duration-fast) var(--ease-entrance); }
+.nav-group[data-open="true"] .caret { transform: rotate(180deg); }
+.submenu-wrap { position: absolute; top: 100%; left: 0; right: 0; display: flex; justify-content: center; visibility: hidden; }
+.nav-group[data-open="true"] .submenu-wrap { visibility: visible; }
+.submenu { min-width: 14rem; padding: 1rem; border: 1px solid var(--hero-rule); display: flex; flex-direction: column; gap: 0.75rem; white-space: nowrap; }
+.submenu a { color: var(--hero-content-muted); transition: color var(--duration-fast) var(--ease-entrance); }
+.submenu a:hover, .submenu a:focus-visible { color: #fff; }
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.product-region { position: relative; }
+.stage-box { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none; transform: translateZ(0); backface-visibility: hidden; }
+.stage-box canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity var(--duration-normal) var(--ease-entrance); }
+.stage-box.is-ready canvas { opacity: 1; }
+.stage-mask {
+  mask-image: linear-gradient(to bottom,
+    #000 0,
+    #000 calc(100% - var(--stage-fade)),
+    rgb(0 0 0 / 0.97) calc(100% - var(--stage-fade) * 0.68),
+    rgb(0 0 0 / 0.82) calc(100% - var(--stage-fade) * 0.52),
+    rgb(0 0 0 / 0.55) calc(100% - var(--stage-fade) * 0.36),
+    rgb(0 0 0 / 0.26) calc(100% - var(--stage-fade) * 0.20),
+    rgb(0 0 0 / 0.08) calc(100% - var(--stage-fade) * 0.08),
+    transparent 100%);
+}
+.hero { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem; min-height: calc(100lvh - 5rem); padding: 1.5rem 1.25rem 2rem; }
+.hero-markers { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.statement { display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.1; }
+.statement.is-right { text-align: right; align-items: flex-end; }
+.statement .corner { width: 0.6875rem; height: 0.6875rem; }
+.statement .corner.flip-x { transform: scaleX(-1); }
+.statement .corner.flip-y { transform: scaleY(-1); }
+.statement .corner.flip-xy { transform: scale(-1); }
+.statement p { display: flex; flex-direction: column; }
+.hero-product { position: relative; z-index: 0; width: 100%; aspect-ratio: 4 / 3; }
+@media (min-width: 768px) { .hero-product { aspect-ratio: 16 / 9; } }
+.plate { position: absolute; left: 50%; top: 50%; width: 108.39%; aspect-ratio: 5028 / 2684; transform: translate(-50%, -50%); pointer-events: none; }
+.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.plate-rest { opacity: 0.2; }
+.plate-lit { opacity: 1; filter: brightness(2.6) contrast(1.1); mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; visibility: hidden; }
+.plate-lit.is-lit { visibility: visible; }
+#hero-product { will-change: transform; }
+.plate-rest, .plate-lit, .globe, .reticle { will-change: transform, opacity; }
+.hero-claim-group { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; text-align: center; }
+.claim { font-size: var(--text-lede); line-height: 0.9; }
+.claim span { display: block; }
+.hero-badges { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; gap: 0.75rem; }
+@media (min-width: 640px) { .hero-badges { grid-template-columns: 1fr 1fr; } }
+.badge { height: 100%; min-height: max(4.25rem, 68px); }
+.badge-panel { height: 100%; border: 1px solid var(--hero-rule); display: flex; align-items: stretch; gap: 1rem; padding: 0.5rem 1rem; }
+.badge-glyph { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; }
+.badge-glyph img { display: block; }
+.badge-glyph .globe { width: 2.3125rem; height: 1.4375rem; }
+.badge-glyph .reticle { width: 1.4375rem; height: 1.4375rem; }
+.badge-rule { width: 1px; background: var(--hero-rule); align-self: stretch; }
+.badge-lines { display: flex; flex-direction: column; justify-content: center; font-size: var(--text-caption); letter-spacing: -0.02em; line-height: 1.1; }
+
+/* ── Details ──────────────────────────────────────────────────────────── */
+.details { position: relative; display: flex; flex-direction: column; gap: 2.5rem; padding: 4rem 1.25rem; }
+.details .screen-box, .collections .screen-box, .faq .screen-box { display: contents; }
+.details-head { display: flex; flex-direction: column; gap: 2.25rem; }
+.details-rows { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+@media (min-width: 640px) { .details-rows { grid-template-columns: 1fr 1fr; } .details-rows > li:last-child { grid-column: 1 / -1; } }
+.row { border: 1px solid var(--hero-rule); padding: 1rem; display: flex; gap: 1.5rem; }
+.row-rail { display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+.row-rail img { width: 2rem; height: 2rem; position: relative; top: calc(1.125rem * -0.155); }
+.row-text { display: flex; flex-direction: column; gap: 0.75rem; }
+.row-text p { color: var(--hero-content-muted); }
+.details-cta { display: flex; }
+
+/* ── Collections ──────────────────────────────────────────────────────── */
+.collections { position: relative; display: flex; flex-direction: column; gap: 2.5rem; padding: 4rem 1.25rem; }
+.collections-head { display: flex; flex-direction: column; gap: 1.5rem; }
+.cards { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+@media (min-width: 640px) { .cards { grid-template-columns: 1fr 1fr; } }
+.card { height: 27.875rem; perspective: 60rem; }
+.card-surface { position: relative; height: 100%; border: 1px solid var(--hero-rule); padding: 1rem; transform-style: preserve-3d; display: flex; flex-direction: column; }
+.card-head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; }
+.card-head img { width: 0.8125rem; height: 0.8125rem; }
+.card-title-block { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.5rem; max-width: 13.5625rem; margin-top: 0.75rem; }
+.card-title { font-size: var(--text-title); line-height: 1.1; }
+.card-price { color: var(--hero-content-muted); transition: color var(--duration-fast) var(--ease-entrance); }
+.card-surface:hover .card-price, .card-surface:focus-within .card-price { color: #fff; }
+.card-layer { position: absolute; inset: 0; z-index: 0; pointer-events: none; transform: translate3d(0, 0, 2.5rem); }
+.card-views { position: absolute; left: 50%; top: 50%; width: 18.5625rem; height: 18.5625rem; margin: -9.28125rem 0 0 -9.28125rem; }
+.card-views img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity var(--duration-normal) var(--ease-entrance); }
+.card-views img.is-active { opacity: 1; }
+.swatches { position: absolute; top: 50%; right: 1rem; z-index: 2; transform: translateY(-50%); display: flex; flex-direction: column; gap: 0.25rem; }
+.swatch { width: 0.75rem; height: 0.75rem; border: 1px solid var(--hero-rule); transition: border-color var(--duration-fast) var(--ease-entrance), background-color var(--duration-fast) var(--ease-entrance); }
+.swatch:hover { border-color: #fff; }
+.swatch[aria-pressed="true"] { background: #fff; border-color: #fff; }
+.card-band { position: relative; z-index: 1; height: 2.3125rem; margin-top: auto; }
+.chips { position: absolute; inset: 0; display: flex; gap: 0.5rem; align-items: stretch; transition: opacity var(--duration-fast) var(--ease-entrance); }
+.chip { display: inline-flex; align-items: center; padding-inline: 0.875rem; border: 1px solid rgb(255 255 255 / 0.4); font-size: var(--text-chip); white-space: nowrap; }
+.card-link { position: absolute; left: 0; top: 0; height: 100%; display: inline-flex; align-items: center; gap: 1rem; padding-inline: 0.875rem; border: 1px solid #fff; font-size: var(--text-chip); opacity: 0; pointer-events: none; transition: opacity var(--duration-fast) var(--ease-entrance); }
+.card-link .arrow { width: 0.625rem; height: 0.375rem; }
+.card-surface:hover .chips, .card-surface:focus-within .chips { opacity: 0; }
+.card-surface:hover .card-link, .card-surface:focus-within .card-link { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .chips { display: none; } .card-link { opacity: 1; pointer-events: auto; } }
+.collections-cta { display: flex; justify-content: center; }
+
+/* ── Technology ───────────────────────────────────────────────────────── */
+.technology { position: relative; }
+.tech-stage { display: flex; flex-direction: column; gap: 2.5rem; padding: 4rem 1.25rem; }
+.tech-head { display: flex; flex-direction: column; gap: 2.25rem; }
+.tech-note br { display: none; }
+.reel { position: relative; width: 80%; margin-inline: auto; aspect-ratio: 1; }
+@media (min-width: 640px) { .reel { aspect-ratio: 4 / 3; } }
+.reel-inner { position: absolute; inset: 0; }
+.reel-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: url(#reel-key); transition: opacity var(--duration-normal) var(--ease-entrance); }
+.reel-poster.is-hidden { opacity: 0; }
+.reel-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tech-cards { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+@media (min-width: 640px) { .tech-cards { grid-template-columns: 1fr 1fr; } .tech-cards > .tech-card:last-child { grid-column: 1 / -1; } }
+.tech-card { border: 1px solid var(--hero-rule); padding: 1rem; display: flex; gap: 1.5rem; }
+.leader, .leader-mark { display: none; }
+
+/* ── FAQ ──────────────────────────────────────────────────────────────── */
+.faq { position: relative; display: flex; flex-direction: column; gap: 2.5rem; padding: 4rem 1.25rem; overflow: hidden; }
+.faq-stage { display: none; }
+.faq-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.faq-row { border: 1px solid var(--hero-rule); padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+.faq-row dt { display: flex; flex-direction: column-reverse; gap: 0.75rem; }
+.faq-row dd { color: var(--hero-content-muted); }
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.site-footer { position: relative; display: flex; flex-direction: column; gap: 2.5rem; padding: 3rem 1.25rem 2rem; border-top: 1px solid var(--hero-rule); }
+.site-footer .logo img { width: 2.5rem; height: 6.1875rem; }
+.footer-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.footer-col h2 { font-size: var(--text-body); margin-bottom: 0.75rem; }
+.footer-col ul { display: flex; flex-direction: column; gap: 0.5rem; }
+.footer-col a { color: var(--hero-content-muted); transition: color var(--duration-fast) var(--ease-entrance); }
+.footer-col a:hover, .footer-col a:focus-visible { color: #fff; }
+.newsletter { display: flex; flex-direction: column; gap: max(0.75rem, 12px); width: 100%; max-width: 24rem; }
+.newsletter label.lede { line-height: 1.1; }
+.field { display: flex; border: 1px solid #fff; }
+.field input { flex: 1; min-width: 0; padding: max(0.875rem, 14px) max(1rem, 16px); background: none; border: 0; color: #fff; font: inherit; text-transform: none; }
+.field input::placeholder { color: var(--hero-content-faint); text-transform: uppercase; }
+.field input:focus-visible { outline: none; }
+.field button { display: flex; align-items: center; padding-inline: max(1rem, 16px); }
+.field button .arrow { width: 0.625rem; height: 0.375rem; }
+.consent { display: flex; align-items: center; gap: max(0.5rem, 8px); font-size: var(--text-fine); color: var(--hero-content-faint); letter-spacing: -0.02em; cursor: pointer; }
+.consent input { appearance: none; -webkit-appearance: none; width: 0.625rem; height: 0.625rem; margin: 0; border: 1px solid var(--hero-rule); background: none; flex: none; cursor: pointer; transition: border-color var(--duration-fast) var(--ease-entrance), background-color var(--duration-fast) var(--ease-entrance); }
+.consent:hover input { border-color: #fff; }
+.consent input:checked { background: #fff; border-color: #fff; }
+.footer-rule { height: 1px; background: var(--hero-rule); }
+.footer-close { display: flex; flex-direction: column-reverse; gap: 1rem; color: var(--hero-content-faint); }
+.footer-close .notice { font-size: var(--text-chip); }
+.footer-close .social { display: flex; }
+.footer-close .social a { transition: color var(--duration-fast) var(--ease-entrance); }
+.footer-close .social a:hover, .footer-close .social a:focus-visible { color: #fff; }
+
+/* ── Preloader ────────────────────────────────────────────────────────── */
+.preloader { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; transition: opacity 500ms var(--ease-entrance); }
+.preloader.is-done { opacity: 0; pointer-events: none; }
+.pre-column { width: 20rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.pre-logo { height: 4rem; width: auto; transition: transform 700ms var(--ease-entrance); }
+.preloader.is-done .pre-logo { transform: scale(1.05); }
+.pre-bar { position: relative; width: 100%; height: 1px; background: var(--hero-rule); }
+.pre-fill { position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(0); }
+.pre-count { font-size: var(--text-body); color: var(--hero-content-muted); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.pre-bracket { position: absolute; width: 2.5rem; height: 2.5rem; border: 0 solid #fff; transition: transform 700ms var(--ease-entrance), opacity 700ms var(--ease-entrance); }
+.pre-bracket.tl { top: 2.5rem; left: 2.5rem; border-top-width: 1px; border-left-width: 1px; }
+.pre-bracket.tr { top: 2.5rem; right: 2.5rem; border-top-width: 1px; border-right-width: 1px; }
+.pre-bracket.bl { bottom: 2.5rem; left: 2.5rem; border-bottom-width: 1px; border-left-width: 1px; }
+.pre-bracket.br { bottom: 2.5rem; right: 2.5rem; border-bottom-width: 1px; border-right-width: 1px; }
+.preloader.is-done .pre-bracket { transform: scale(1.5); opacity: 0; }
+
+/* ── Touch targets & narrow prose ─────────────────────────────────────── */
+@media (max-width: 1023.98px), (max-aspect-ratio: 0.9999/1) {
+  .tap-area { position: relative; }
+  .tap-area::before { content: ""; position: absolute; inset: calc(var(--tap-y, 0.75rem) * -1) calc(var(--tap-x, 0.5rem) * -1); }
+}
+@media (max-width: 639.98px) { .prose { text-wrap: balance; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FRAME LAYOUT — the 1440×800 artboard. Every rem is one artboard unit.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
+  :root { --text-display: 4.375rem; }
+  .frame-only { display: revert; }
+  .flow-only { display: none !important; }
+
+  /* Header: zero-height sticky wrapper, absolute bar at the artboard's coordinates. */
+  .header-wrap { height: 0; border: 0; background: none !important; }
+  .site-header { position: absolute; inset-inline: 0; top: 0; height: auto; padding: 0; display: block; }
+  .site-header .logo { position: absolute; top: 1.5rem; left: 2.5rem; }
+  .site-header .logo img { width: 1.875rem; height: 4.6875rem; }
+  .site-nav { position: absolute; top: 1.5rem; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-start; gap: 4rem; line-height: 0.9; }
+  .cart { position: absolute; top: 1.5rem; right: 2.5rem; }
+  .hamburger, .mobile-panel { display: none !important; }
+
+  /* Hero */
+  .hero { display: block; min-height: 100lvh; min-height: max(100lvh, 50rem); padding: 0; }
+  .hero-markers { display: contents; }
+  .statement { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; }
+  .statement.is-left { left: 2.5rem; width: 9.75rem; }
+  .statement.is-right { right: 2.5rem; width: 11.5625rem; }
+  .hero-product { position: absolute; left: 50%; top: 50%; width: 90rem; height: 50rem; transform: translate(-50%, -50%); aspect-ratio: auto; pointer-events: none; }
+  .plate { width: 82.8rem; top: calc(50% + 1.21875rem); }
+  .hero-claim-group { display: contents; }
+  .claim { position: absolute; bottom: 7.375rem; left: 0; right: 0; z-index: 2; text-align: center; }
+  .hero-cta-row { position: absolute; bottom: 2.5rem; left: 0; right: 0; z-index: 2; display: flex; justify-content: center; }
+  .hero-badges { display: contents; }
+  .badge { position: absolute; bottom: 2.5rem; z-index: 2; height: max(4.25rem, 68px); }
+  .badge.is-left { left: 2.5rem; width: max(16.4375rem, 263px); }
+  .badge.is-right { right: 2.5rem; width: max(13.875rem, 222px); }
+  .badge-panel { padding: 0 1rem; }
+
+  /* The product stage: sticky inside the region, one artboard tall. */
+  .stage-box { position: sticky; top: calc((100lvh - 50rem) / 2); height: 50rem; }
+  .product-region > .hero { margin-top: -50rem; }
+
+  /* Screens with a centred 800-unit box. */
+  .details, .collections, .faq { display: block; height: 100lvh; min-height: 50rem; padding: 0; }
+  .details .screen-box, .collections .screen-box, .faq .screen-box { display: block; position: absolute; inset-inline: 0; top: 50%; margin-top: -25rem; height: 50rem; z-index: 2; }
+
+  /* Details */
+  .details-head { position: absolute; top: 7.625rem; left: 2.5rem; width: 21.5rem; }
+  .details-rows { position: absolute; top: 7.625rem; right: 2.5rem; width: 26.0625rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .row { gap: 3rem; }
+  .details-cta { position: absolute; bottom: 2.5rem; left: 2.5rem; }
+
+  /* Collections */
+  .collections-head { display: contents; }
+  .collections-head h2 { position: absolute; top: 8.125rem; left: 2.5rem; }
+  .collections-head p { position: absolute; top: 7.625rem; right: 5.375rem; width: 17.8125rem; }
+  .cards { position: absolute; top: 14.25rem; left: 2.5rem; right: 2.5rem; display: flex; gap: 0.75rem; }
+  .card { flex: 1; }
+  .collections-cta { position: absolute; bottom: 2.5rem; left: 0; right: 0; }
+
+  /* Technology: a pinned stage inside a tall region, measured in artboards. */
+  .technology { height: calc(2.6 * 50rem); }
+  .tech-stage { position: sticky; top: 0; height: 50rem; display: block; padding: 0; }
+  .tech-head { display: contents; }
+  .tech-head h2 { position: absolute; top: 8.5rem; left: 2.5rem; width: 22.9375rem; z-index: 2; }
+  .tech-note { position: absolute; top: 40.625rem; left: 2.5rem; width: 22.9375rem; z-index: 2; }
+  .tech-note br { display: revert; }
+  .reel { position: absolute; top: 8.5rem; left: 0; right: 0; margin-inline: auto; width: 41.5625rem; height: 38.6875rem; aspect-ratio: auto; z-index: 1; }
+  .tech-cards { display: contents; }
+  .tech-card { position: absolute; right: 2.5rem; width: 26.0625rem; top: calc(var(--card-top) / 16 * 1rem); z-index: 2; gap: 3rem; opacity: 0; transform: translateY(1rem); pointer-events: none; transition: opacity var(--duration-normal) var(--ease-entrance), transform var(--duration-normal) var(--ease-entrance); }
+  .tech-card.is-active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .leader { display: block; position: absolute; z-index: 1; opacity: 0; transition: opacity var(--duration-normal) var(--ease-entrance); pointer-events: none; }
+  .leader.is-active { opacity: 1; }
+  .leader line { stroke: rgb(255 255 255 / 0.25); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .leader-mark { display: block; position: absolute; z-index: 1; width: 0.5rem; height: 0.5rem; margin: -0.25rem 0 0 -0.25rem; background: #fff; opacity: 0; transition: opacity var(--duration-normal) var(--ease-entrance); pointer-events: none; }
+  .leader-mark.is-active { opacity: 1; }
+
+  /* FAQ */
+  .faq-stage { display: block; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .faq h2 { position: absolute; top: 8.5rem; left: 2.5rem; width: 16.125rem; }
+  .faq-list { position: absolute; top: 8.5rem; right: 2.5rem; width: 42.125rem; }
+  .faq-row { flex-direction: row; align-items: center; height: 7.125rem; padding: 0 1rem; gap: 0; }
+  .faq-row dt { width: 12.1875rem; flex: none; flex-direction: column; justify-content: center; gap: 2rem; }
+  .faq-row dt .question { max-width: 10.9375rem; }
+  .faq-row dt .question.is-wide { max-width: 12.1875rem; }
+  .faq-row dd { flex: 1; align-self: stretch; margin-left: 2rem; padding-left: 2rem; padding-top: 0.92rem; border-left: 1px solid rgb(255 255 255 / 0.25); }
+
+  /* Footer: 350 units, not 800. */
+  .site-footer { display: block; height: 21.875rem; padding: 0; border-top: 0; }
+  .site-footer .logo { position: absolute; top: 1.5rem; left: 2.5rem; }
+  .footer-columns { position: absolute; top: 1.5rem; left: 18.5625rem; display: flex; gap: 3rem; }
+  .footer-col { width: 7.5rem; }
+  .footer-col:last-child { width: auto; }
+  .newsletter { position: absolute; top: 1.5rem; right: 2.5rem; width: max(15.3125rem, 245px); max-width: none; }
+  .footer-rule { position: absolute; top: 17.875rem; left: 2.5rem; right: 2.5rem; }
+  .footer-close { display: contents; }
+  .footer-close .notice { position: absolute; top: 19.375rem; left: 2.5rem; font-size: var(--text-body); }
+  .footer-close .social { position: absolute; top: 19.375rem; right: 2.5rem; }
+
+  /* Preloader at the frame */
+  .pre-column { width: 16rem; }
+  .pre-logo { height: 3rem; }
+  .pre-count { font-size: var(--text-caption); color: var(--hero-content-faint); }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <filter id="reel-key" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  7 7 7 0 -0.04" />
+  </filter>
+</svg>
+
+<div class="lattice-shell" id="shell">
+  <div class="lattice-beam" aria-hidden="true"></div>
+  <div class="lattice-bars" aria-hidden="true"></div>
+
+  <!-- ── Header: pinned for the whole page ─────────────────────────────── -->
+  <div class="header-wrap lattice-panel">
+    <header class="site-header" data-enter="rise-up" data-enter-delay="0">
+      <a class="logo" href="#" aria-label="ARTEFAKT — home">
+        <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/logo-mark.png" alt="" width="30" height="75">
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#" class="tap-area"><span data-decode data-decode-delay="0">SHOP</span></a>
+        <div class="nav-group" id="collections-group" data-open="false">
+          <button type="button" id="collections-button" aria-expanded="false" aria-controls="collections-menu">
+            <span data-decode data-decode-delay="60">COLLECTIONS</span>
+            <img class="caret" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-caret.svg" alt="" width="6" height="5">
+          </button>
+          <div class="submenu-wrap">
+            <div class="submenu lattice-panel" id="collections-menu">
+              <a href="#">SHADOW PUFFER JACKET</a>
+              <a href="#">TACTICAL HOODED JACKET</a>
+              <a href="#">THERMAL BOMBER JACKET</a>
+              <a href="#">TECH SHELL JACKET</a>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="tap-area"><span data-decode data-decode-delay="120">TECHNOLOGY</span></a>
+        <a href="#" class="tap-area"><span data-decode data-decode-delay="180">ABOUT</span></a>
+      </nav>
+      <a class="cart tap-area" href="#"><span data-decode data-decode-delay="240">CART [ 0 ]</span></a>
+      <button type="button" class="hamburger flow-only" id="hamburger" aria-expanded="false" aria-controls="mobile-panel">
+        <span aria-hidden="true"></span><span class="sr-only">Menu</span>
+      </button>
+    </header>
+  </div>
+  <div class="mobile-panel lattice-plain" id="mobile-panel" role="dialog" aria-modal="true" aria-label="Menu">
+    <button type="button" class="close" id="mobile-close" aria-label="Close menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2l14 14M16 2L2 16" stroke="#fff" stroke-width="1"/></svg>
+    </button>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="#">SHOP</a></li>
+        <li><a href="#">COLLECTIONS</a>
+          <div class="sub">
+            <a href="#">SHADOW PUFFER JACKET</a>
+            <a href="#">TACTICAL HOODED JACKET</a>
+            <a href="#">THERMAL BOMBER JACKET</a>
+            <a href="#">TECH SHELL JACKET</a>
+          </div>
+        </li>
+        <li><a href="#">TECHNOLOGY</a></li>
+        <li><a href="#">ABOUT</a></li>
+        <li><a href="#">CART [ 0 ]</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <main class="site-main" id="main">
+
+    <!-- ── The product region: hero + details share one WebGL stage ──────── -->
+    <div class="product-region" id="product-region">
+      <div class="stage-box stage-mask" id="hero-stage">
+        <canvas id="hero-canvas" role="img" aria-label="Oversized weather-resistant thermal jacket, iridescent black"></canvas>
+      </div>
+
+      <!-- 1 — Hero -->
+      <section class="hero" id="hero" aria-labelledby="hero-title" data-reveal="hero">
+        <div class="hero-markers">
+          <div class="statement is-left" data-enter="fade" data-enter-delay="140">
+            <img class="corner" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-bracket.svg" alt="" width="11" height="11">
+            <p>
+              <span data-decode data-decode-delay="140">ENGINEERED</span>
+              <span data-decode data-decode-delay="220">FOR MOTION.</span>
+              <span data-decode data-decode-delay="300">BUILT TO ENDURE.</span>
+            </p>
+            <img class="corner flip-xy" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-bracket.svg" alt="" width="11" height="11">
+          </div>
+          <div class="statement is-right" data-enter="fade" data-enter-delay="140">
+            <img class="corner flip-x" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-bracket.svg" alt="" width="11" height="11">
+            <p>
+              <span data-decode data-decode-delay="140">DESIGNED</span>
+              <span data-decode data-decode-delay="220">FOR THE UNKNOWN.</span>
+              <span data-decode data-decode-delay="300">READY FOR ANYTHING.</span>
+            </p>
+            <img class="corner flip-y" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-bracket.svg" alt="" width="11" height="11">
+          </div>
+        </div>
+
+        <div class="hero-product" id="hero-product">
+          <div class="plate" id="plate" aria-hidden="true">
+            <img class="plate-rest" id="plate-rest" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-wordmark.png" alt="" width="5028" height="2684">
+            <img class="plate-lit" id="plate-lit" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-wordmark.png" alt="" width="5028" height="2684">
+          </div>
+        </div>
+
+        <div class="hero-claim-group">
+          <h1 class="claim" id="hero-title" data-enter="fade" data-enter-delay="260">
+            <span data-decode data-decode-delay="260" data-keep-sentences>WEATHER-RESISTANT. THERMAL INSULATION.</span>
+            <span data-decode data-decode-delay="370" data-keep-sentences>OVERSIZED FIT. LIMITED QUANTITY.</span>
+          </h1>
+          <div class="hero-cta-row" data-enter="rise" data-enter-delay="420">
+            <a class="cta lattice-panel" href="#">
+              <span data-decode data-decode-delay="420">SHOP NOW</span>
+              <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6">
+              <b class="bk bk-tl" aria-hidden="true"></b><b class="bk bk-tr" aria-hidden="true"></b><b class="bk bk-bl" aria-hidden="true"></b><b class="bk bk-br" aria-hidden="true"></b>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-badges">
+          <div class="badge is-left" data-enter="rise" data-enter-delay="480">
+            <div class="badge-panel lattice-panel">
+              <div class="badge-glyph">
+                <img class="globe" id="globe" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-icon-globe.svg" alt="" width="37" height="23">
+                <span class="caption faint" data-decode data-decode-delay="480">EST.2022</span>
+              </div>
+              <span class="badge-rule" aria-hidden="true"></span>
+              <p class="badge-lines">
+                <span data-decode data-decode-delay="480">BUILT ON EXPERIENCE.</span>
+                <span data-decode data-decode-delay="540">DRIVEN BY INNOVATION.</span>
+                <span data-decode data-decode-delay="600">FOCUSED ON YOU.</span>
+              </p>
+            </div>
+          </div>
+          <div class="badge is-right" data-enter="rise" data-enter-delay="540">
+            <div class="badge-panel lattice-panel">
+              <div class="badge-glyph">
+                <img class="reticle" id="reticle" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/hero/hero-icon-target.svg" alt="" width="23" height="23">
+              </div>
+              <span class="badge-rule" aria-hidden="true"></span>
+              <p class="badge-lines">
+                <span data-decode data-decode-delay="540">WORLOWIDE SHIPPING</span>
+                <span data-decode data-decode-delay="600">FAST &amp; SECURE DELIVERY</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 — Details -->
+      <section class="details" id="details" aria-labelledby="details-title" data-reveal="details">
+        <div class="screen-box">
+          <div class="details-head">
+            <h2 class="display" id="details-title" data-enter="fade" data-enter-delay="0"><span data-decode data-decode-delay="0">DETAILS MATTER.</span></h2>
+            <p class="lede muted prose" data-enter="fade" data-enter-delay="120" data-bind><span data-decode data-decode-delay="120">A technical outer layer made for movement, changing weather and everything that happens beyond the expected.</span></p>
+          </div>
+          <ol class="details-rows">
+            <li class="row lattice-panel" data-enter="fade" data-enter-delay="80">
+              <div class="row-rail"><span class="index" aria-hidden="true">01</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/details/details-icon-shell.svg" alt="" width="32" height="32"></div>
+              <div class="row-text"><h3><span data-decode data-decode-delay="80">WEATHER-RESISTANT SHELL</span></h3><p class="prose"><span data-decode data-decode-delay="140" data-decode-queue="details">Water-repellent outer shell protects against wind and rain.</span></p></div>
+            </li>
+            <li class="row lattice-panel" data-enter="fade" data-enter-delay="170">
+              <div class="row-rail"><span class="index" aria-hidden="true">02</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/details/details-icon-thermal.svg" alt="" width="32" height="32"></div>
+              <div class="row-text"><h3><span data-decode data-decode-delay="170">THERMAL INSULATION</span></h3><p class="prose"><span data-decode data-decode-delay="230" data-decode-queue="details">Advanced padding traps heat and keeps you warm without unnecessary weight.</span></p></div>
+            </li>
+            <li class="row lattice-panel" data-enter="fade" data-enter-delay="260">
+              <div class="row-rail"><span class="index" aria-hidden="true">03</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/details/details-icon-construction.svg" alt="" width="32" height="32"></div>
+              <div class="row-text"><h3><span data-decode data-decode-delay="260">REINFORCED CONSTRUCTION</span></h3><p class="prose"><span data-decode data-decode-delay="320" data-decode-queue="details">Durable stitching and structural panels for added strength.</span></p></div>
+            </li>
+            <li class="row lattice-panel" data-enter="fade" data-enter-delay="350">
+              <div class="row-rail"><span class="index" aria-hidden="true">04</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/details/details-icon-storage.svg" alt="" width="32" height="32"></div>
+              <div class="row-text"><h3><span data-decode data-decode-delay="350">FUNCTIONAL STORAGE</span></h3><p class="prose"><span data-decode data-decode-delay="410" data-decode-queue="details">Multiple zippered pockets inside and outside to carry essentials.</span></p></div>
+            </li>
+            <li class="row lattice-panel" data-enter="fade" data-enter-delay="440">
+              <div class="row-rail"><span class="index" aria-hidden="true">05</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/details/details-icon-fit.svg" alt="" width="32" height="32"></div>
+              <div class="row-text"><h3><span data-decode data-decode-delay="440">OVERSIZED FIT</span></h3><p class="prose"><span data-decode data-decode-delay="500" data-decode-queue="details">Relaxed silhouette for movement, layering and everyday comfort.</span></p></div>
+            </li>
+          </ol>
+          <div class="details-cta" data-enter="rise" data-enter-delay="200">
+            <a class="cta lattice-panel" href="#">
+              <span data-decode data-decode-delay="200">EXPLORE THE JACKET</span>
+              <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6">
+              <b class="bk bk-tl" aria-hidden="true"></b><b class="bk bk-tr" aria-hidden="true"></b><b class="bk bk-bl" aria-hidden="true"></b><b class="bk bk-br" aria-hidden="true"></b>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 3 — Collections -->
+    <section class="collections" id="collections" aria-labelledby="collections-title" data-reveal="collections">
+      <div class="screen-box">
+        <div class="collections-head">
+          <h2 class="display" id="collections-title" data-enter="fade" data-enter-delay="0"><span data-decode data-decode-delay="0">COLLECTIONS.</span></h2>
+          <p class="lede muted prose" data-enter="fade" data-enter-delay="120" data-bind><span data-decode data-decode-delay="120">Technical jackets for changing weather, movement and everyday use.</span></p>
+        </div>
+        <ul class="cards" id="cards">
+          <li class="card" data-enter="rise" data-enter-delay="80" data-tilt>
+            <div class="card-surface">
+              <div class="card-layer"><div class="card-views">
+                <img class="is-active" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-lime.png" alt="Shadow Puffer Jacket, lime colourway" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-lime.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-lime.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-lime.png" alt="" width="1080" height="1080" loading="lazy">
+              </div></div>
+              <div class="card-head"><span class="index" aria-hidden="true">01</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-corner.svg" alt="" width="13" height="13"></div>
+              <div class="card-title-block"><h3 class="card-title"><span data-decode data-decode-delay="80">SHADOW PUFFER JACKET</span></h3><p class="card-price tabular">$480</p></div>
+              <div class="swatches" role="group" aria-label="Shadow Puffer Jacket views">
+                <button type="button" class="swatch tap-area" aria-pressed="true"><span class="sr-only">View 1</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 2</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 3</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 4</span></button>
+              </div>
+              <div class="card-band">
+                <ul class="chips" aria-label="Tags"><li class="chip">OVERSIZED FIT</li><li class="chip">LIMITED QUANTITY</li></ul>
+                <a class="card-link" href="#">SHOP NOW <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6"><span class="sr-only">, Shadow Puffer Jacket</span></a>
+              </div>
+            </div>
+          </li>
+          <li class="card" data-enter="rise" data-enter-delay="170" data-tilt>
+            <div class="card-surface">
+              <div class="card-layer"><div class="card-views">
+                <img class="is-active" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-rose.png" alt="Tactical Hooded Jacket, rose colourway" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-rose.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-rose.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-rose.png" alt="" width="1080" height="1080" loading="lazy">
+              </div></div>
+              <div class="card-head"><span class="index" aria-hidden="true">02</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-corner.svg" alt="" width="13" height="13"></div>
+              <div class="card-title-block"><h3 class="card-title"><span data-decode data-decode-delay="170">TACTICAL HOODED JACKET</span></h3><p class="card-price tabular">$395</p></div>
+              <div class="swatches" role="group" aria-label="Tactical Hooded Jacket views">
+                <button type="button" class="swatch tap-area" aria-pressed="true"><span class="sr-only">View 1</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 2</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 3</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 4</span></button>
+              </div>
+              <div class="card-band">
+                <ul class="chips" aria-label="Tags"><li class="chip">LAYERING PIECE</li><li class="chip">UTILITY</li></ul>
+                <a class="card-link" href="#">SHOP NOW <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6"><span class="sr-only">, Tactical Hooded Jacket</span></a>
+              </div>
+            </div>
+          </li>
+          <li class="card" data-enter="rise" data-enter-delay="260" data-tilt>
+            <div class="card-surface">
+              <div class="card-layer"><div class="card-views">
+                <img class="is-active" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-copper.png" alt="Thermal Bomber Jacket, copper colourway" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-copper.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-copper.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-copper.png" alt="" width="1080" height="1080" loading="lazy">
+              </div></div>
+              <div class="card-head"><span class="index" aria-hidden="true">03</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-corner.svg" alt="" width="13" height="13"></div>
+              <div class="card-title-block"><h3 class="card-title"><span data-decode data-decode-delay="260">THERMAL BOMBER JACKET</span></h3><p class="card-price tabular">$340</p></div>
+              <div class="swatches" role="group" aria-label="Thermal Bomber Jacket views">
+                <button type="button" class="swatch tap-area" aria-pressed="true"><span class="sr-only">View 1</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 2</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 3</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 4</span></button>
+              </div>
+              <div class="card-band">
+                <ul class="chips" aria-label="Tags"><li class="chip">THERMAL INSULATION</li><li class="chip">WINDPROOF</li></ul>
+                <a class="card-link" href="#">SHOP NOW <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6"><span class="sr-only">, Thermal Bomber Jacket</span></a>
+              </div>
+            </div>
+          </li>
+          <li class="card" data-enter="rise" data-enter-delay="350" data-tilt>
+            <div class="card-surface">
+              <div class="card-layer"><div class="card-views">
+                <img class="is-active" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-cobalt.png" alt="Tech Shell Jacket, cobalt colourway" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-cobalt.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-cobalt.png" alt="" width="1080" height="1080" loading="lazy">
+                <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-cobalt.png" alt="" width="1080" height="1080" loading="lazy">
+              </div></div>
+              <div class="card-head"><span class="index" aria-hidden="true">04</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/collections/collections-corner.svg" alt="" width="13" height="13"></div>
+              <div class="card-title-block"><h3 class="card-title"><span data-decode data-decode-delay="350">TECH SHELL JACKET</span></h3><p class="card-price tabular">$520</p></div>
+              <div class="swatches" role="group" aria-label="Tech Shell Jacket views">
+                <button type="button" class="swatch tap-area" aria-pressed="true"><span class="sr-only">View 1</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 2</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 3</span></button>
+                <button type="button" class="swatch tap-area" aria-pressed="false"><span class="sr-only">View 4</span></button>
+              </div>
+              <div class="card-band">
+                <ul class="chips" aria-label="Tags"><li class="chip">WATER-RESISTANT</li><li class="chip">BREATHABLE</li></ul>
+                <a class="card-link" href="#">SHOP NOW <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6"><span class="sr-only">, Tech Shell Jacket</span></a>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div class="collections-cta" data-enter="rise" data-enter-delay="460">
+          <a class="cta lattice-panel" href="#">
+            <span data-decode data-decode-delay="460">VIEW ALL JACKETS</span>
+            <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6">
+            <b class="bk bk-tl" aria-hidden="true"></b><b class="bk bk-tr" aria-hidden="true"></b><b class="bk bk-bl" aria-hidden="true"></b><b class="bk bk-br" aria-hidden="true"></b>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — Technology: five artboards, one pinned composition -->
+    <section class="technology" id="technology" aria-labelledby="technology-title" data-reveal="technology">
+      <div class="tech-stage" id="tech-stage">
+        <div class="tech-head">
+          <h2 class="display" id="technology-title" data-enter="fade" data-enter-delay="0"><span data-decode data-decode-delay="0">TECHNOLOGY</span><br><span data-decode data-decode-delay="110">ENGINEERED TO ENDURE</span></h2>
+        </div>
+        <div class="reel" id="reel">
+          <div class="reel-inner" id="reel-inner">
+            <img class="reel-poster" id="reel-poster" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-stack.webp" alt="The jacket's five material layers, separated and stacked" width="1024" height="954" loading="lazy">
+            <canvas class="reel-canvas" id="reel-canvas" aria-hidden="true"></canvas>
+          </div>
+        </div>
+        <p class="tech-note lede muted prose" data-enter="fade" data-enter-delay="120"><span data-decode data-decode-delay="120">Every detail has a purpose.</span><br> <span data-decode data-decode-delay="180">From the protective outer shell to the insulation inside, the jacket is designed</span><br> <span data-decode data-decode-delay="240">to perform without compromising its form.</span></p>
+        <div class="tech-cards" id="tech-cards" role="group" aria-label="The five material layers">
+          <div class="tech-card lattice-panel" style="--card-top: 136" data-card="0">
+            <div class="row-rail"><span class="index" aria-hidden="true">01</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-icon-01.svg" alt="" width="32" height="32"></div>
+            <div class="row-text"><h3><span data-decode data-decode-static data-decode-role="title">OUTER SHELL</span></h3><p class="prose muted"><span data-decode data-decode-static data-decode-role="body">Durable outer layer that repels water and protects against wind and rain.</span></p></div>
+          </div>
+          <div class="tech-card lattice-panel" style="--card-top: 236" data-card="1">
+            <div class="row-rail"><span class="index" aria-hidden="true">02</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-icon-02.svg" alt="" width="32" height="32"></div>
+            <div class="row-text"><h3><span data-decode data-decode-static data-decode-role="title">RIPSTOP PROTECTION</span></h3><p class="prose muted"><span data-decode data-decode-static data-decode-role="body">Tear-resistant layer adds durability and prevents wear.</span></p></div>
+          </div>
+          <div class="tech-card lattice-panel" style="--card-top: 370" data-card="2">
+            <div class="row-rail"><span class="index" aria-hidden="true">03</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-icon-03.svg" alt="" width="32" height="32"></div>
+            <div class="row-text"><h3><span data-decode data-decode-static data-decode-role="title">THERMAL INSULATION</span></h3><p class="prose muted"><span data-decode data-decode-static data-decode-role="body">Advanced padding traps heat and keeps you warm without unnecessary weight.</span></p></div>
+          </div>
+          <div class="tech-card lattice-panel" style="--card-top: 492" data-card="3">
+            <div class="row-rail"><span class="index" aria-hidden="true">04</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-icon-04.svg" alt="" width="32" height="32"></div>
+            <div class="row-text"><h3><span data-decode data-decode-static data-decode-role="title">BREATHABLE MEMBRANE</span></h3><p class="prose muted"><span data-decode data-decode-static data-decode-role="body">Allows moisture to escape while blocking wind and water from outside.</span></p></div>
+          </div>
+          <div class="tech-card lattice-panel" style="--card-top: 658" data-card="4">
+            <div class="row-rail"><span class="index" aria-hidden="true">05</span><img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/technology/technology-icon-05.svg" alt="" width="32" height="32"></div>
+            <div class="row-text"><h3><span data-decode data-decode-static data-decode-role="title">COMFORT LINING</span></h3><p class="prose muted"><span data-decode data-decode-static data-decode-role="body">Soft inner layer for all-day comfort and easy layering.</span></p></div>
+          </div>
+        </div>
+        <div class="leaders" id="leaders" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- 5 — FAQ -->
+    <section class="faq" id="faq" aria-labelledby="faq-title" data-reveal="faq">
+      <div class="faq-stage stage-mask" id="faq-stage">
+        <canvas id="faq-canvas" role="img" aria-label="Oversized weather-resistant thermal jacket, iridescent black"></canvas>
+      </div>
+      <div class="screen-box">
+        <h2 class="display" id="faq-title" data-enter="fade" data-enter-delay="0"><span data-decode data-decode-delay="0">NEED TO KNOW.</span></h2>
+        <dl class="faq-list">
+          <div class="faq-row lattice-panel" data-enter="fade" data-enter-delay="80">
+            <dt><span class="question"><span data-decode data-decode-delay="80">HOW DO I CHOOSE THE RIGHT SIZE?</span></span><span class="index" aria-hidden="true">01</span></dt>
+            <dd class="prose"><span data-decode data-decode-delay="140" data-decode-queue="faq">Check our size guide for measurements and fit information. The jackets feature an oversized silhouette for comfortable layering.</span></dd>
+          </div>
+          <div class="faq-row lattice-panel" data-enter="fade" data-enter-delay="170">
+            <dt><span class="question is-wide"><span data-decode data-decode-delay="170">WHAT MATERIALS ARE USED IN THE JACKETS?</span></span><span class="index" aria-hidden="true">02</span></dt>
+            <dd class="prose"><span data-decode data-decode-delay="230" data-decode-queue="faq">We use technical fabrics, ripstop weave and advanced insulation for durability, protection and comfort.</span></dd>
+          </div>
+          <div class="faq-row lattice-panel" data-enter="fade" data-enter-delay="260">
+            <dt><span class="question"><span data-decode data-decode-delay="260">HOW SHOULD I CARE FOR MY JACKET?</span></span><span class="index" aria-hidden="true">03</span></dt>
+            <dd class="prose"><span data-decode data-decode-delay="320" data-decode-queue="faq">Follow the care instructions provided. Avoid harsh detergents and excessive heat to preserve the materials.</span></dd>
+          </div>
+          <div class="faq-row lattice-panel" data-enter="fade" data-enter-delay="350">
+            <dt><span class="question"><span data-decode data-decode-delay="350">DO YOU SHIP INTERNATIONALLY?</span></span><span class="index" aria-hidden="true">04</span></dt>
+            <dd class="prose"><span data-decode data-decode-delay="410" data-decode-queue="faq">Yes. We offer worldwide shipping with secure delivery and tracking on every order.</span></dd>
+          </div>
+          <div class="faq-row lattice-panel" data-enter="fade" data-enter-delay="440">
+            <dt><span class="question"><span data-decode data-decode-delay="440">CAN I RETURN OR EXCHANGE MY ORDER?</span></span><span class="index" aria-hidden="true">05</span></dt>
+            <dd class="prose"><span data-decode data-decode-delay="500" data-decode-queue="faq">Yes. Unworn jackets can be returned or exchanged within the specified return period.</span></dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <!-- 6 — Footer -->
+  <footer class="site-footer" id="footer" data-reveal="footer">
+    <a class="logo" href="#" aria-label="ARTEFAKT — home">
+      <img src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/logo-mark.png" alt="" width="40" height="99">
+    </a>
+    <nav class="footer-columns" aria-label="Footer">
+      <div class="footer-col">
+        <h2><span data-decode data-decode-delay="0">SHOP</span></h2>
+        <ul>
+          <li><a href="#"><span data-decode data-decode-delay="60">CORE</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="120">TECH</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="180">LIMITED</span></a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2><span data-decode data-decode-delay="60">TECHNOLOGY</span></h2>
+        <ul>
+          <li><a href="#"><span data-decode data-decode-delay="120">MATERIALS</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="180">CONSTRUCTION</span></a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2><span data-decode data-decode-delay="120">ABOUT</span></h2>
+        <ul></ul>
+      </div>
+      <div class="footer-col">
+        <h2><span data-decode data-decode-delay="180">SUPPORT</span></h2>
+        <ul>
+          <li><a href="#"><span data-decode data-decode-delay="240">PRIVACY POLICY</span></a></li>
+          <li><a href="#" class="keep-case"><span data-decode data-decode-delay="300">Terms &amp; Conditions</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="360">SIZE GUIDE</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="420">SHIPPING &amp; RETURNS</span></a></li>
+          <li><a href="#"><span data-decode data-decode-delay="480">FAQ</span></a></li>
+        </ul>
+      </div>
+    </nav>
+    <form class="newsletter" id="newsletter" novalidate>
+      <label class="lede" for="newsletter-email"><span data-decode data-decode-delay="0">STAY AHEAD OF THE DROP.</span></label>
+      <div class="field">
+        <input id="newsletter-email" type="email" name="email" autocomplete="email" placeholder="Your e-mail" required>
+        <button type="submit" class="tap-area">
+          <img class="arrow" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/arrow-right.svg" alt="" width="10" height="6">
+          <span class="sr-only">Subscribe</span>
+        </button>
+      </div>
+      <label class="consent"><input type="checkbox" name="consent"><span>I AGREE TO RECEIVE UPDATES.</span></label>
+      <p class="sr-only" id="newsletter-status" role="status" aria-live="polite"></p>
+    </form>
+    <div class="footer-rule" aria-hidden="true"></div>
+    <div class="footer-close">
+      <p class="notice"><span data-decode data-decode-delay="0">© 2026 ARTEFAKT. ALL RIGHTS RESERVED.</span></p>
+      <p class="social"><a href="#">INSTAGRAM</a><span class="sep"> / </span><a href="#">YOUTUBE</a><span class="sep"> / </span><a href="#">TIK-TOK</a></p>
+    </div>
+  </footer>
+</div>
+
+<!-- The loading curtain, in the initial HTML so there is no flash of the page before it. -->
+<div class="preloader lattice-plain" id="preloader" data-preloader aria-label="Loading">
+  <div class="pre-column">
+    <img class="pre-logo" src="https://storage.getlayers.ai/assets/artefakt-5f7a0c9962/ui/logo-mark.png" alt="ARTEFAKT" width="30" height="75">
+    <div class="pre-bar" aria-hidden="true"><div class="pre-fill" id="pre-fill"></div></div>
+    <p class="pre-count caption" aria-live="polite"><span>LOADING</span> <span class="tabular" id="pre-count">000</span></p>
+  </div>
+  <b class="pre-bracket tl" aria-hidden="true"></b>
+  <b class="pre-bracket tr" aria-hidden="true"></b>
+  <b class="pre-bracket bl" aria-hidden="true"></b>
+  <b class="pre-bracket br" aria-hidden="true"></b>
+</div>
+<noscript><style>[data-preloader]{display:none!important}[data-enter]{opacity:1!important}</style></noscript>
+<div class="asset-errors" id="asset-errors" role="alert" hidden></div>
+<script type="module">
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARTEFAKT core — no external code. The shared ticker, the pointer field,
+   the scramble decoder, the reveal observers, the loading curtain, the
+   header, the hero idles, the card tilt, the technology reel and card walk.
+   The WebGL product and smooth scroll live in the second module below so a
+   CDN failure can never take this one down.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const ASSET_BASE_URL = "https://storage.getlayers.ai/assets/artefakt-5f7a0c9962";
+const FONT_URL = `${ASSET_BASE_URL}/fonts/3270-Regular.otf`;
+
+const frameQuery = matchMedia("(min-width: 1024px) and (min-aspect-ratio: 1/1)");
+const coarseQuery = matchMedia("(hover: none) and (pointer: coarse)");
+const reducedQuery = matchMedia("(prefers-reduced-motion: reduce)");
+const narrowQuery = matchMedia("(max-width: 639.98px)");
+const isFrame = () => frameQuery.matches;
+const isCoarse = () => coarseQuery.matches;
+const isReduced = () => reducedQuery.matches;
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const frameLerp = (k, dt) => 1 - Math.pow(1 - k, dt / (1000 / 60));
+const smootherstep = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+
+/* ── One shared rAF ticker ───────────────────────────────────────────────── */
+const ticker = (() => {
+  const subscribers = new Set();
+  let rafId = null;
+  const frame = (time) => {
+    for (const sub of [...subscribers]) {
+      if (!subscribers.has(sub)) continue;
+      if (time - sub.last < sub.gap()) continue;
+      sub.last = time;
+      try { sub.callback(time); } catch (error) { console.error("[ticker] subscriber threw:", error); }
+    }
+    rafId = requestAnimationFrame(frame);
+  };
+  return {
+    add(callback, gap = () => 0) {
+      const sub = { callback, gap, last: -Infinity };
+      subscribers.add(sub);
+      if (rafId === null) rafId = requestAnimationFrame(frame);
+      return () => {
+        subscribers.delete(sub);
+        if (subscribers.size === 0 && rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      };
+    },
+  };
+})();
+
+/* ── Asset failures must be visible ─────────────────────────────────────── */
+const errorBanner = document.getElementById("asset-errors");
+const reportedFailures = new Set();
+function reportAssetFailure(url, error) {
+  console.error("[artefakt] asset failed:", url, error);
+  const text = `Failed to load ${url}${error && error.message ? ` — ${error.message}` : ""}`;
+  if (reportedFailures.has(text)) return;
+  reportedFailures.add(text);
+  const line = document.createElement("p");
+  line.textContent = text;
+  errorBanner.appendChild(line);
+  errorBanner.hidden = false;
+}
+
+/* ── The pointer field: one writer for the whole page ───────────────────── */
+const pointer = { x: -1e4, y: -1e4, lagX: -1e4, lagY: -1e4, seen: false };
+(function pointerField() {
+  if (isCoarse() || isReduced()) return;
+  const LERP = 0.12, LAG_LERP = 0.045;
+  const root = document.documentElement;
+  let target = null, last = performance.now();
+  addEventListener("pointermove", (event) => { target = { x: event.clientX, y: event.clientY }; }, { passive: true });
+  ticker.add((time) => {
+    const dt = Math.min(64, time - last); last = time;
+    if (!target) return;
+    if (!pointer.seen) {
+      pointer.seen = true;
+      pointer.x = pointer.lagX = target.x; pointer.y = pointer.lagY = target.y;
+    } else {
+      const k = frameLerp(LERP, dt), kl = frameLerp(LAG_LERP, dt);
+      pointer.x += (target.x - pointer.x) * k; pointer.y += (target.y - pointer.y) * k;
+      pointer.lagX += (target.x - pointer.lagX) * kl; pointer.lagY += (target.y - pointer.lagY) * kl;
+    }
+    root.style.setProperty("--pointer-x", `${pointer.x.toFixed(1)}px`);
+    root.style.setProperty("--pointer-y", `${pointer.y.toFixed(1)}px`);
+    root.style.setProperty("--pointer-lag-x", `${pointer.lagX.toFixed(1)}px`);
+    root.style.setProperty("--pointer-lag-y", `${pointer.lagY.toFixed(1)}px`);
+  });
+})();
+
+/* ── A spring, for entrances and the card tilt ──────────────────────────── */
+class Spring {
+  constructor(value = 0, { tension = 170, friction = 26, mass = 1 } = {}) {
+    this.value = value; this.target = value; this.velocity = 0;
+    this.tension = tension; this.friction = friction; this.mass = mass;
+  }
+  step(dtMs) {
+    let remaining = Math.min(dtMs, 100);
+    while (remaining > 0) {
+      const h = Math.min(remaining, 1000 / 60) / 1000;
+      const force = -this.tension * (this.value - this.target) - this.friction * this.velocity;
+      this.velocity += (force / this.mass) * h;
+      this.value += this.velocity * h;
+      remaining -= h * 1000;
+    }
+    return this;
+  }
+  get settled() { return Math.abs(this.value - this.target) < 0.0005 && Math.abs(this.velocity) < 0.0005; }
+}
+
+/* ── Entrances: fade or rise on a spring ────────────────────────────────── */
+function enter(el) {
+  if (el.classList.contains("is-entered") || el.dataset.entering) return;
+  const kind = el.dataset.enter;
+  const delay = Number(el.dataset.enterDelay || 0);
+  if (isReduced()) { el.classList.add("is-entered"); return; }
+  el.dataset.entering = "1";
+  const y = kind === "rise" ? 12 : kind === "rise-up" ? -8 : 0;
+  const run = () => {
+    const spring = new Spring(0, { tension: 170, friction: 26 });
+    spring.target = 1;
+    let last = performance.now();
+    el.style.opacity = "0";
+    if (y) el.style.translate = `0 ${y}px`;
+    const unsub = ticker.add((time) => {
+      const dt = time - last; last = time;
+      spring.step(dt);
+      const p = clamp01(spring.value);
+      el.style.opacity = p.toFixed(3);
+      if (y) el.style.translate = `0 ${((1 - p) * y).toFixed(2)}px`;
+      if (spring.settled) {
+        unsub();
+        el.classList.add("is-entered");
+        el.style.opacity = ""; el.style.translate = ""; delete el.dataset.entering;
+      }
+    });
+  };
+  if (delay > 0) setTimeout(run, delay); else run();
+}
+
+/* ── Typesetting: bind the small words ──────────────────────────────────── */
+const TIED = new Set([
+  "a","an","the", "and","or","but","as","if","so",
+  "of","to","in","on","at","by","for","with","from","into",
+  "over","under","per","via","no","not",
+  "without","within","onto","upon","against","across","around",
+  "after","before","through","during","between",
+  "is","are","was","be","we","it","its",
+  "my","our","your","their","his","her","i",
+  "can","may","do","does","did","has","have","had","will","&",
+]);
+const NBSP = " ";
+function bindSmallWords(text, narrow) {
+  const words = text.split(" ");
+  let out = "", gluedToPrevious = false;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i], next = words[i + 1];
+    const tie = next !== undefined && TIED.has(word.toLowerCase()) && !/[.,;:!?]$/.test(word);
+    const allowed = tie && !(narrow && (gluedToPrevious || word.length + 1 + next.length > 20));
+    out += word;
+    if (next !== undefined) out += allowed ? NBSP : " ";
+    gluedToPrevious = allowed;
+  }
+  return out;
+}
+const keepSentences = (text) => text.replace(/(?<!\.) /g, NBSP);
+
+/* ── The scramble decoder: every label decodes from random glyphs ───────── */
+const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>";
+const STEP_MS = 40;
+const MAX_STEPS = 22;
+const decoders = new Map();
+const queues = new Map();
+
+class Decoder {
+  constructor(el) {
+    this.el = el;
+    this.original = el.textContent.replace(/\s+/g, " ").trim();
+    this.glyphs = document.createElement("span");
+    this.glyphs.className = "decode-glyphs";
+    this.glyphs.setAttribute("aria-hidden", "true");
+    this.sr = document.createElement("span");
+    this.sr.className = "sr-only";
+    el.replaceChildren(this.glyphs, this.sr);
+    this.unsub = null; this.timer = null; this.resolveDone = null;
+    this.setText(this.composed());
+  }
+  composed() {
+    let text = this.original;
+    if (this.el.hasAttribute("data-keep-sentences")) text = keepSentences(text);
+    else if (this.el.closest("[data-bind]")) text = bindSmallWords(text, narrowQuery.matches);
+    return text;
+  }
+  setText(text) {
+    this.text = text;
+    this.sr.textContent = this.original;
+    if (!this.unsub) this.glyphs.textContent = text;
+    this.chars = [...text];
+    this.letters = this.chars.filter((c) => !/\s/.test(c)).length;
+    this.perStep = Math.max(1, Math.ceil(this.letters / MAX_STEPS));
+  }
+  retype() { this.setText(this.composed()); }
+  render(resolved) {
+    let count = 0, out = "";
+    for (const c of this.chars) {
+      if (/\s/.test(c)) { out += c; continue; }
+      out += count < resolved ? c : CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+      count++;
+    }
+    this.glyphs.textContent = out;
+  }
+  play(delay = 0) {
+    if (isReduced()) { this.glyphs.textContent = this.text; return Promise.resolve(); }
+    this.cancel();
+    return new Promise((resolve) => {
+      this.resolveDone = resolve;
+      const start = () => {
+        this.timer = null;
+        let resolved = 0;
+        this.render(0);
+        this.unsub = ticker.add(() => {
+          resolved += this.perStep;
+          if (resolved >= this.letters) { this.finish(); return; }
+          this.render(resolved);
+        }, () => STEP_MS);
+      };
+      if (delay > 0) this.timer = setTimeout(start, delay); else start();
+    });
+  }
+  finish() {
+    if (this.unsub) { this.unsub(); this.unsub = null; }
+    this.glyphs.textContent = this.text;
+    if (this.resolveDone) { const done = this.resolveDone; this.resolveDone = null; done(); }
+  }
+  cancel() {
+    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    if (this.unsub) { this.unsub(); this.unsub = null; }
+    if (this.resolveDone) { const done = this.resolveDone; this.resolveDone = null; done(); }
+    this.glyphs.textContent = this.text;
+  }
+}
+
+function initDecoders() {
+  for (const el of document.querySelectorAll("[data-decode]")) {
+    const decoder = new Decoder(el);
+    decoders.set(el, decoder);
+    const trigger = el.closest("a, button, [data-decode-trigger]") || el;
+    trigger.addEventListener("mouseenter", () => decoder.play());
+    if (trigger !== el || el.tabIndex >= 0) trigger.addEventListener("focus", () => decoder.play());
+  }
+  narrowQuery.addEventListener("change", () => { for (const d of decoders.values()) d.retype(); });
+}
+
+/* Play a decoder on arrival: queued ones run one after another. */
+function playOnArrival(el) {
+  const decoder = decoders.get(el);
+  if (!decoder) return;
+  const delay = Number(el.dataset.decodeDelay || 0);
+  const queue = el.dataset.decodeQueue;
+  if (!queue) { decoder.play(delay); return; }
+  const previous = queues.get(queue) || Promise.resolve();
+  const wait = new Promise((r) => setTimeout(r, delay));
+  const next = Promise.all([previous, wait]).then(() => decoder.play(0));
+  queues.set(queue, next);
+}
+
+/* ── Reveal on arrival: two observers, whichever fires first ────────────── */
+const REVEAL_ROOT_MARGIN = "0px 0px -64px 0px";
+function watchReveal(el, callback) {
+  let done = false;
+  const fire = () => { if (done) return; done = true; a.disconnect(); b.disconnect(); callback(); };
+  const a = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) fire(); }, { rootMargin: REVEAL_ROOT_MARGIN });
+  const b = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) fire(); }, { threshold: 1 });
+  a.observe(el); b.observe(el);
+}
+function revealBlock(block) {
+  for (const el of block.querySelectorAll("[data-enter]")) enter(el);
+  if (block.matches("[data-enter]")) enter(block);
+  for (const el of block.querySelectorAll("[data-decode]:not([data-decode-static])")) playOnArrival(el);
+}
+function armReveals() {
+  for (const block of document.querySelectorAll("[data-reveal]")) {
+    if (block.dataset.reveal === "hero") continue;
+    watchReveal(block, () => revealBlock(block));
+  }
+}
+
+/* ── The loading curtain: gated on real readiness ───────────────────────── */
+const PATIENCE_MS = 8000, FLOOR_MS = 700, COUNT_LERP = 0.08;
+function runPreloader() {
+  const curtain = document.getElementById("preloader");
+  const fill = document.getElementById("pre-fill");
+  const count = document.getElementById("pre-count");
+  const startedAt = performance.now();
+  const gates = { fonts: false, load: false, scene: false };
+  const total = 3;
+  let finished = false, displayed = 0, lifted = false, last = startedAt;
+
+  const target = () => (gates.fonts + gates.load + gates.scene) / total;
+  const lift = () => {
+    if (lifted) return; lifted = true;
+    curtain.classList.add("is-done");
+    dispatchEvent(new CustomEvent("curtain-lifted"));
+    setTimeout(() => curtain.remove(), 700);
+  };
+
+  document.fonts.ready.then(() => { gates.fonts = true; });
+  document.fonts.load('1em "3270"').then((faces) => { if (!faces.length) reportAssetFailure(FONT_URL, new Error("font did not resolve")); }).catch((e) => reportAssetFailure(FONT_URL, e));
+  if (document.readyState === "complete") gates.load = true; else addEventListener("load", () => { gates.load = true; }, { once: true });
+  addEventListener("hero-scene-ready", () => { gates.scene = true; }, { once: true });
+
+  const unsub = ticker.add((time) => {
+    const dt = Math.min(64, time - last); last = time;
+    const elapsed = time - startedAt;
+    const allReady = gates.fonts && gates.load && gates.scene;
+    if (!finished && elapsed >= FLOOR_MS && (allReady || elapsed >= PATIENCE_MS)) {
+      finished = true;
+      if (!allReady && !window.ARTEFAKT.sceneModule) reportAssetFailure("https://cdn.jsdelivr.net/npm/three@0.185.0 (the scene module)", new Error("did not start"));
+    }
+    const ceiling = finished ? 1 : Math.min(0.97, target() + 0.12);
+    displayed += (ceiling - displayed) * frameLerp(COUNT_LERP, dt);
+    if (finished && displayed > 0.995) displayed = 1;
+    fill.style.transform = `scaleX(${displayed.toFixed(4)})`;
+    count.textContent = String(Math.round(displayed * 100)).padStart(3, "0");
+    if (displayed >= 1) { unsub(); lift(); }
+  });
+}
+
+/* ── Header: submenu and the mobile panel ───────────────────────────────── */
+function initHeader() {
+  const group = document.getElementById("collections-group");
+  const button = document.getElementById("collections-button");
+  let closeTimer = null;
+  const setOpen = (open) => { group.dataset.open = String(open); button.setAttribute("aria-expanded", String(open)); };
+  const cancelClose = () => { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } };
+  const scheduleClose = () => { cancelClose(); closeTimer = setTimeout(() => setOpen(false), 220); };
+  group.addEventListener("mouseenter", () => { cancelClose(); setOpen(true); });
+  group.addEventListener("mouseleave", scheduleClose);
+  button.addEventListener("click", () => setOpen(group.dataset.open !== "true"));
+  group.addEventListener("focusout", (event) => { if (!group.contains(event.relatedTarget)) setOpen(false); });
+  addEventListener("keydown", (event) => { if (event.key === "Escape" && group.dataset.open === "true") { setOpen(false); button.focus(); } });
+  addEventListener("pointerdown", (event) => { if (!group.contains(event.target)) setOpen(false); });
+
+  const hamburger = document.getElementById("hamburger");
+  const panel = document.getElementById("mobile-panel");
+  const close = document.getElementById("mobile-close");
+  const setPanel = (open) => {
+    panel.classList.toggle("is-open", open);
+    hamburger.setAttribute("aria-expanded", String(open));
+    document.documentElement.style.overflow = open ? "hidden" : "";
+    if (open) close.focus(); else hamburger.focus();
+  };
+  hamburger.addEventListener("click", () => setPanel(true));
+  close.addEventListener("click", () => setPanel(false));
+  panel.addEventListener("click", (event) => { if (event.target.closest("a")) setPanel(false); });
+  addEventListener("keydown", (event) => { if (event.key === "Escape" && panel.classList.contains("is-open")) setPanel(false); });
+}
+
+/* ── Hero: the wordmark plate's torch and sweep, and the badge idles ─────── */
+function initHero() {
+  const plate = document.getElementById("plate");
+  const lit = document.getElementById("plate-lit");
+  const rest = document.getElementById("plate-rest");
+  const hero = document.getElementById("hero");
+  const globe = document.getElementById("globe");
+  const reticle = document.getElementById("reticle");
+  if (isReduced()) return;
+
+  const SWEEP_CROSS_MS = 2600, SWEEP_CYCLE_MS = 7400, SWEEP_BAND = 0.42, BREATHE_S = 6.7;
+  const GLOBE_PERIOD_S = 3.4, GLOBE_SWING_DEG = 58, GLOBE_PERSPECTIVE = 110;
+  const RETICLE_PING_S = 2.4, ATTACK = 0.1, RELEASE = 0.32, GAIN = 0.16;
+  const fine = !isCoarse();
+  lit.style.maskImage = lit.style.webkitMaskImage = fine
+    ? "radial-gradient(circle closest-side, #000 0%, rgba(0,0,0,0.75) 45%, transparent 100%)"
+    : "linear-gradient(100deg, transparent 0%, rgb(0 0 0 / 0.35) 32%, #000 50%, rgb(0 0 0 / 0.35) 68%, transparent 100%)";
+  lit.classList.add("is-lit");
+
+  let unsub = null;
+  const tick = (time) => {
+    const t = time / 1000;
+    rest.style.opacity = (0.2 * (1.25 + 0.45 * Math.sin((t / BREATHE_S) * Math.PI * 2))).toFixed(4);
+    const rect = plate.getBoundingClientRect();
+    if (fine && pointer.seen) {
+      const r = Math.min(260, 0.42 * Math.max(rect.width, rect.height));
+      const x = pointer.x - rect.left - r, y = pointer.y - rect.top - r;
+      lit.style.maskSize = lit.style.webkitMaskSize = `${2 * r}px ${2 * r}px`;
+      lit.style.maskPosition = lit.style.webkitMaskPosition = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+    } else if (!fine) {
+      const phase = (time % SWEEP_CYCLE_MS) / SWEEP_CROSS_MS;
+      const band = rect.width * SWEEP_BAND;
+      const x = phase <= 1 ? lerp(-band, rect.width, phase) : -band * 4;
+      lit.style.maskSize = lit.style.webkitMaskSize = `${band}px 100%`;
+      lit.style.maskPosition = lit.style.webkitMaskPosition = `${x.toFixed(1)}px 0px`;
+    }
+    const gphase = (t / GLOBE_PERIOD_S) * Math.PI * 2;
+    globe.style.transform = `perspective(${GLOBE_PERSPECTIVE}px) rotateY(${(Math.sin(gphase) * GLOBE_SWING_DEG).toFixed(2)}deg)`;
+    const rphase = (t % RETICLE_PING_S) / RETICLE_PING_S;
+    let env = 0;
+    if (rphase < ATTACK) env = rphase / ATTACK;
+    else if (rphase < ATTACK + RELEASE) env = 1 - (rphase - ATTACK) / RELEASE;
+    const e = env * env * (3 - 2 * env);
+    reticle.style.transform = `scale(${(1 + e * GAIN).toFixed(4)})`;
+    reticle.style.opacity = (0.78 + 0.22 * e).toFixed(3);
+  };
+  new IntersectionObserver((entries) => {
+    const on = entries.some((e) => e.isIntersecting);
+    if (on && !unsub) unsub = ticker.add(tick);
+    if (!on && unsub) { unsub(); unsub = null; }
+  }, { rootMargin: "10%" }).observe(hero);
+}
+
+/* ── Collections: the tilt and the swatches ─────────────────────────────── */
+function initCollections() {
+  for (const card of document.querySelectorAll("[data-tilt]")) {
+    const surface = card.querySelector(".card-surface");
+    const layer = card.querySelector(".card-layer");
+    const springs = { rx: new Spring(), ry: new Spring(), lx: new Spring(), ly: new Spring() };
+    let unsub = null, last = 0;
+    const drive = () => {
+      if (unsub) return;
+      last = performance.now();
+      unsub = ticker.add((time) => {
+        const dt = time - last; last = time;
+        let settled = true;
+        for (const s of Object.values(springs)) { s.step(dt); if (!s.settled) settled = false; }
+        surface.style.transform = `rotateX(${springs.rx.value.toFixed(3)}deg) rotateY(${springs.ry.value.toFixed(3)}deg)`;
+        layer.style.transform = `translate3d(${springs.lx.value.toFixed(3)}rem, ${springs.ly.value.toFixed(3)}rem, 2.5rem)`;
+        if (settled) { unsub(); unsub = null; }
+      });
+    };
+    card.addEventListener("pointermove", (event) => {
+      if (event.pointerType !== "mouse" || isReduced()) return;
+      const rect = card.getBoundingClientRect();
+      const nx = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width) * 2 - 1));
+      const ny = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height) * 2 - 1));
+      springs.rx.target = -ny * 6.5; springs.ry.target = nx * 6.5;
+      springs.lx.target = nx * 0.55; springs.ly.target = ny * 0.55 * 0.7;
+      drive();
+    });
+    card.addEventListener("pointerleave", () => { for (const s of Object.values(springs)) s.target = 0; drive(); });
+
+    const views = card.querySelectorAll(".card-views img");
+    const swatches = card.querySelectorAll(".swatch");
+    swatches.forEach((swatch, index) => swatch.addEventListener("click", () => {
+      swatches.forEach((s, i) => s.setAttribute("aria-pressed", String(i === index)));
+      views.forEach((v, i) => v.classList.toggle("is-active", i === index));
+    }));
+  }
+}
+
+/* ── Technology: the scrubbed reel and the card walk ────────────────────── */
+function initTechnology() {
+  const section = document.getElementById("technology");
+  const stage = document.getElementById("tech-stage");
+  const reel = document.getElementById("reel");
+  const reelInner = document.getElementById("reel-inner");
+  const poster = document.getElementById("reel-poster");
+  const canvas = document.getElementById("reel-canvas");
+  const cards = [...document.querySelectorAll(".tech-card")];
+  const leadersHost = document.getElementById("leaders");
+
+  const TIERS = { hi: { dir: "hi", side: 768, count: 61 }, lo: { dir: "lo", side: 512, count: 41 } };
+  const TIER_BREAKPOINT = 1024, FETCH_CONCURRENCY = 6, SEEK_FOLLOW = 0.45, ENTRY_LEAD = 1, RELEASE_LAG = 0.15, REPAINT_EPSILON = 1 / 255;
+  const LAYER_COUNT = cards.length;
+  const cardTop = [136, 236, 370, 492, 658], cardSideY = [197, 287, 431, 553, 709];
+  const anchorFx = [0.600, 0.707, 0.773, 0.855, 0.822], anchorFy = [0.145, 0.354, 0.477, 0.576, 0.740];
+  const CARD_INSET = 457, ARTWORK = 619, ARTWORK_TOP = 136;
+  const units = (u) => `${(u / 16).toFixed(4)}rem`;
+
+  /* The leader line: one construction, derived from the numbers that place the card. */
+  const leaders = cards.map((_, i) => {
+    const offset = (anchorFx[i] - 0.5) * ARTWORK;
+    const anchorY = ARTWORK_TOP + anchorFy[i] * ARTWORK;
+    const top = Math.min(anchorY, cardSideY[i]);
+    const height = Math.abs(cardSideY[i] - anchorY);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "leader"); svg.setAttribute("viewBox", "0 0 100 100"); svg.setAttribute("preserveAspectRatio", "none");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const downward = anchorY <= cardSideY[i];
+    line.setAttribute("x1", "0"); line.setAttribute("y1", downward ? "0" : "100"); line.setAttribute("x2", "100"); line.setAttribute("y2", downward ? "100" : "0");
+    line.setAttribute("vector-effect", "non-scaling-stroke");
+    svg.appendChild(line);
+    svg.style.left = `calc(50% + ${units(offset)})`; svg.style.top = units(top);
+    svg.style.width = `calc(50% - ${units(CARD_INSET + offset)})`; svg.style.height = `max(1px, ${units(height)})`;
+    const mark = document.createElement("span");
+    mark.className = "leader-mark";
+    mark.style.left = `calc(50% + ${units(offset)})`; mark.style.top = units(anchorY);
+    leadersHost.append(svg, mark);
+    return { svg, mark };
+  });
+
+  let active = -1;
+  const setActive = (index) => {
+    if (index === active) return;
+    active = index;
+    cards.forEach((card, i) => {
+      card.classList.toggle("is-active", i === index);
+      leaders[i].svg.classList.toggle("is-active", i === index);
+      leaders[i].mark.classList.toggle("is-active", i === index);
+    });
+    const card = cards[index];
+    const title = decoders.get(card.querySelector('[data-decode-role="title"]'));
+    const body = decoders.get(card.querySelector('[data-decode-role="body"]'));
+    if (title) title.play(0);
+    if (body) body.play(90);
+  };
+
+  /* The reel */
+  const tier = innerWidth >= TIER_BREAKPOINT ? TIERS.hi : TIERS.lo;
+  const frames = new Array(tier.count).fill(null);
+  let loaded = 0, building = false, ctx = null, playhead = 0, drawnAt = -1, lastTime = 0;
+  const frameUrl = (i) => `${ASSET_BASE_URL}/technology/stack-frames/${tier.dir}/${String(i).padStart(3, "0")}.webp`;
+  const buildReel = () => {
+    if (building) return; building = true;
+    canvas.width = canvas.height = tier.side;
+    ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+    ctx.globalCompositeOperation = "lighter";
+    let next = 0;
+    const worker = async () => {
+      while (next < tier.count) {
+        const i = next++;
+        try {
+          const response = await fetch(frameUrl(i));
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          frames[i] = await createImageBitmap(await response.blob());
+          loaded++;
+          if (loaded === 1) { drawnAt = -1; draw(); }
+        } catch (error) { reportAssetFailure(frameUrl(i), error); }
+      }
+    };
+    for (let w = 0; w < FETCH_CONCURRENCY; w++) worker();
+  };
+  const nearest = (i) => {
+    if (frames[i]) return frames[i];
+    for (let d = 1; d < tier.count; d++) {
+      if (frames[i + d]) return frames[i + d];
+      if (frames[i - d]) return frames[i - d];
+    }
+    return null;
+  };
+  const draw = () => {
+    if (!ctx || !loaded) return;
+    const position = playhead * (tier.count - 1);
+    if (Math.abs(position - drawnAt) < REPAINT_EPSILON && drawnAt >= 0) return;
+    const ia = Math.floor(position), ib = Math.min(tier.count - 1, ia + 1), t = position - ia;
+    const a = nearest(ia), b = nearest(ib);
+    if (!a || !b) return;
+    const side = tier.side;
+    ctx.clearRect(0, 0, side, side);
+    ctx.globalAlpha = 1 - t; ctx.drawImage(a, 0, 0, side, side);
+    ctx.globalAlpha = t; ctx.drawImage(b, 0, 0, side, side);
+    drawnAt = position;
+    poster.classList.add("is-hidden");
+  };
+
+  const progress = () => {
+    if (isFrame()) {
+      const sectionTop = section.getBoundingClientRect().top;
+      const lead = innerHeight * ENTRY_LEAD;
+      const travel = section.offsetHeight - stage.offsetHeight;
+      return clamp01((lead - sectionTop) / (lead + travel));
+    }
+    const rect = reel.getBoundingClientRect();
+    return clamp01((innerHeight - rect.top) / (innerHeight + rect.height));
+  };
+
+  let unsub = null;
+  const tick = (time) => {
+    const dt = Math.min(64, time - (lastTime || time)); lastTime = time;
+    const p = progress();
+    setActive(Math.min(LAYER_COUNT - 1, Math.floor(p * LAYER_COUNT)));
+    playhead += (p - playhead) * (1 - Math.pow(1 - SEEK_FOLLOW, dt / (1000 / 60)));
+    draw();
+    if (isFrame()) {
+      const released = Math.max(0, -stage.getBoundingClientRect().top);
+      const lag = innerHeight * RELEASE_LAG;
+      const drop = lag * (1 - Math.exp(-released / lag));
+      reelInner.style.transform = drop > 0.01 ? `translateY(${drop.toFixed(2)}px)` : "";
+    } else if (reelInner.style.transform) reelInner.style.transform = "";
+  };
+  new IntersectionObserver((entries) => {
+    const on = entries.some((e) => e.isIntersecting);
+    if (on) buildReel();
+    if (on && !unsub) { lastTime = 0; unsub = ticker.add(tick); }
+    if (!on && unsub) { unsub(); unsub = null; }
+  }, { rootMargin: "100% 0px" }).observe(section);
+}
+
+/* ── Footer: the newsletter form has no endpoint yet ────────────────────── */
+function initFooter() {
+  const form = document.getElementById("newsletter");
+  const status = document.getElementById("newsletter-status");
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    status.textContent = form.email.validity.valid ? "Thank you. You are on the list." : "Please enter a valid e-mail address.";
+  });
+}
+
+/* ── Boot ───────────────────────────────────────────────────────────────── */
+window.ARTEFAKT = {
+  ASSET_BASE_URL, ticker, pointer, reportAssetFailure, frameQuery, coarseQuery, reducedQuery,
+  isFrame, isCoarse, isReduced, smootherstep, sceneModule: false,
+};
+initDecoders();
+initHeader();
+initHero();
+initCollections();
+initTechnology();
+initFooter();
+runPreloader();
+addEventListener("curtain-lifted", () => {
+  revealBlock(document.querySelector(".site-header"));
+  revealBlock(document.getElementById("hero"));
+  armReveals();
+}, { once: true });
+</script>
+<script type="module">
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARTEFAKT scene — the only external code: three.js and Lenis.
+   One canvas, one context, one ticker subscription per product instance.
+   ═══════════════════════════════════════════════════════════════════════════ */
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import Lenis from "lenis";
+
+const A = window.ARTEFAKT;
+A.sceneModule = true;
+const { ticker, reportAssetFailure, isFrame, isCoarse, isReduced, smootherstep } = A;
+
+/* ── Smooth scroll ───────────────────────────────────────────────────────── */
+if (!isReduced()) {
+  try {
+    const lenis = new Lenis({ lerp: 0.075, smoothWheel: true, syncTouch: true, autoRaf: false });
+    ticker.add((time) => lenis.raf(time));
+    A.lenis = lenis;
+  } catch (error) { console.error("[artefakt] Lenis failed:", error); }
+}
+scrollTo(0, 0);
+
+/* ── Fixed parameters ────────────────────────────────────────────────────── */
+const DEG = Math.PI / 180;
+const FRAME_HEIGHT = 800;
+const SUBJECT_HEIGHT = 570, SUBJECT_RISE = 36;
+const DETAILS_HEIGHT = 795, DETAILS_DROP = 140, DETAILS_SHIFT_X = -92;
+const SCROLL_TURN = 40 * DEG;
+const BOXED_FILL_Y = 0.97, BOXED_FILL_X = 0.93, BOXED_DROP = 0.025;
+const DRIFT_TAIL = 2.2;
+const drift = (t) => 1 - Math.pow(1 - t, DRIFT_TAIL);
+const RELEASE_LAG = 0.15;
+const TURN_MAX = 24 * DEG, ROLL_MAX = 12 * DEG, TILT_MAX_X = 3 * DEG, PARALLAX = 12;
+const TILT_STIFFNESS = 0.08, TILT_DAMPING = 0.52;
+const DRAG_DEGREES_PER_PX = 0.4 * DEG, SPIN_FRICTION = 0.94, SPIN_STOP = 0.05 * DEG;
+const TRAVEL_MUTE_SPEED = 0.02, TRAVEL_MUTE_MS = 200, TRAVEL_SETTLE_MS = 900;
+const IDLE_PERIOD_S = 7, IDLE_ROTATION = 1.5 * DEG, IDLE_RISE = 4;
+const PHYSICS_STEP_MS = 1000 / 60, MAX_PHYSICS_STEPS = 4;
+const JOURNEY_FOLLOW = 0.12, JIGGLE_DRIVE_FOLLOW = 0.18, JIGGLE_DEPTH_GAIN = 0.4;
+const SLEEVE_LIMIT = 30 * DEG, SLEEVE_STIFFNESS = 0.15, SLEEVE_DAMPING = 0.75, STRAP_SCALE = 1.6;
+const RATIO_STEPS = { mobile: [1, 0.85, 0.75], tablet: [1.25, 1, 0.85], desktop: [1.5, 1.25, 1] };
+const FRAME_BUDGET = { mobile: 1000 / 30, tablet: 1000 / 45, desktop: 0 };
+const FPS_FLOOR = 50, FPS_WINDOW_MS = 500, CELL = 50;
+const STILL = { height: 765, offsetX: -285, offsetY: -140, entrance: { shiftX: -110, turn: -28 * DEG } };
+const LOOK = {
+  colour: 0x070a14, metalness: 0.15, roughness: 0.32, envMapIntensity: 0.45,
+  iridescence: 1, iridescenceIOR: 1.3, iridescenceThicknessRange: [120, 360],
+  clearcoat: 1, clearcoatRoughness: 0.06,
+};
+const MODEL_URL = `${A.ASSET_BASE_URL}/hero/hero-jacket.glb`;
+const DRACO_PATH = "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/libs/draco/gltf/";
+const ARM_BONE = /^\s*(shoulder|arm|forearm)_[LR]$/i;
+const BELT_BONE = /^belt-\d+_[LR]$/i;
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const scratchQ = new THREE.Quaternion();
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* One damped integrator per axis: the cursor's place is the angle. */
+class Integrator {
+  constructor() { this.value = 0; this.velocity = 0; }
+  step(target) {
+    this.velocity = (this.velocity + (target - this.value) * TILT_STIFFNESS) * TILT_DAMPING;
+    this.value += this.velocity;
+  }
+}
+
+class ProductScene {
+  constructor({ box, canvas, section, hoverArea, mode }) {
+    this.box = box; this.canvas = canvas; this.section = section; this.hoverArea = hoverArea; this.mode = mode;
+    this.coarse = isCoarse();
+    this.tier = !this.coarse ? "desktop" : innerWidth < 768 ? "mobile" : "tablet";
+    this.ratioIndex = 0;
+    this.needsFrame = true; this.visible = true; this.unsub = null; this.ready = false; this.failed = false;
+    this.hover = { nx: 0, ny: 0 };
+    this.turn = new Integrator(); this.roll = new Integrator(); this.tiltX = new Integrator();
+    this.px = new Integrator(); this.py = new Integrator();
+    this.journey = 0; this.followed = 0; this.stepJourney = 0; this.intensity = 1;
+    this.approach = 0; this.turnBaseValue = 0;
+    this.spin = 0; this.spinVelocity = 0; this.drag = null;
+    this.jiggleDrive = 0; this.bones = [];
+    this.accumulator = 0; this.elapsed = 0; this.lastTime = null;
+    this.released = 0; this.lagPx = 0;
+    this.fps = { frames: 0, since: 0, bad: 0 };
+    this.cssWidth = 1; this.cssHeight = 1; this.cssHeightRaw = 1;
+  }
+
+  async init() {
+    let stage = `the WebGL context for #${this.canvas.id}`;
+    try {
+      this.createRenderer();
+      stage = MODEL_URL;
+      await this.loadModel();
+      this.layout();
+      this.renderer.compile(this.scene, this.camera);
+      this.ready = true;
+      this.box.classList.add("is-ready");
+    } catch (error) {
+      this.failed = true;
+      reportAssetFailure(stage, error);
+    } finally {
+      if (this.mode === "journey") dispatchEvent(new CustomEvent("hero-scene-ready", { detail: { ok: !this.failed } }));
+    }
+    if (this.failed) return;
+    this.bindEvents();
+    this.observe();
+    this.subscribe();
+  }
+
+  createRenderer() {
+    const coarse = this.coarse;
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas, alpha: true, antialias: !coarse,
+      powerPreference: coarse ? "default" : "high-performance", stencil: false,
+    });
+    this.renderer.setClearAlpha(0);
+    this.renderer.autoClear = false;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 0.95;
+    this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    this.scene = new THREE.Scene();
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+    this.scene.environmentIntensity = 0.28;
+    const keyLight = new THREE.DirectionalLight(0x2f63ff, 4.5); keyLight.position.set(-2.4, 2.2, 2.6);
+    const rimLight = new THREE.DirectionalLight(0xffd9c0, 2.4); rimLight.position.set(2.8, 0.6, -2.2);
+    this.scene.add(keyLight, rimLight);
+  }
+
+  async loadModel() {
+    const loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath(DRACO_PATH);
+    loader.setDRACOLoader(draco);
+    const gltf = await loader.loadAsync(MODEL_URL);
+    const model = gltf.scene;
+    model.traverse((object) => {
+      if (object.isMesh) {
+        const previous = Array.isArray(object.material) ? object.material : [object.material];
+        const next = previous.map((m) => {
+          const material = new THREE.MeshPhysicalMaterial({
+            color: LOOK.colour, metalness: LOOK.metalness, roughness: LOOK.roughness,
+            envMapIntensity: LOOK.envMapIntensity,
+            iridescence: LOOK.iridescence, iridescenceIOR: LOOK.iridescenceIOR,
+            iridescenceThicknessRange: LOOK.iridescenceThicknessRange,
+            clearcoat: LOOK.clearcoat, clearcoatRoughness: LOOK.clearcoatRoughness,
+            map: m && m.map ? m.map : null, normalMap: m && m.normalMap ? m.normalMap : null,
+          });
+          if (m && m.normalScale) material.normalScale.copy(m.normalScale);
+          return material;
+        });
+        object.material = Array.isArray(object.material) ? next : next[0];
+        object.frustumCulled = false;
+      }
+      if (object.isBone && (ARM_BONE.test(object.name) || BELT_BONE.test(object.name))) {
+        let depth = 0;
+        for (let p = object.parent; p; p = p.parent) if (p.isBone && (ARM_BONE.test(p.name) || BELT_BONE.test(p.name))) depth++;
+        this.bones.push({ bone: object, rest: object.quaternion.clone(), depth, scale: BELT_BONE.test(object.name) ? STRAP_SCALE : 1, angle: 0, velocity: 0 });
+      }
+    });
+    const bounds = new THREE.Box3().setFromObject(model);
+    const centre = bounds.getCenter(new THREE.Vector3());
+    this.modelSize = bounds.getSize(new THREE.Vector3());
+    if (!(this.modelSize.y > 0)) throw new Error("model has no size");
+    model.position.sub(centre);
+    /* Two pivots, and the nesting is load-bearing: the roll outermost, the turntable inside. */
+    this.turnGroup = new THREE.Group(); this.turnGroup.add(model);
+    this.rollGroup = new THREE.Group(); this.rollGroup.add(this.turnGroup);
+    this.scene.add(this.rollGroup);
+  }
+
+  /* Snap the buffer to a 50px cell pitch; take scale from the raw height. */
+  layout() {
+    if (this.mode === "journey") this.placeStageBox();
+    const rect = this.box.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0)) return;
+    this.cssHeightRaw = rect.height;
+    this.cssWidth = Math.ceil(rect.width / CELL) * CELL;
+    this.cssHeight = Math.ceil(rect.height / CELL) * CELL;
+    const step = RATIO_STEPS[this.tier][this.ratioIndex];
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, step));
+    this.renderer.setSize(this.cssWidth, this.cssHeight, true);
+    this.camera.aspect = this.cssWidth / this.cssHeight;
+    this.camera.updateProjectionMatrix();
+    this.needsFrame = true;
+  }
+
+  /* Below the frame the canvas sits over the hero's own product box. */
+  placeStageBox() {
+    const product = document.getElementById("hero-product");
+    const region = document.getElementById("product-region");
+    if (isFrame()) { this.box.style.top = ""; this.box.style.height = ""; return; }
+    const top = product.getBoundingClientRect().top - region.getBoundingClientRect().top;
+    this.box.style.top = `${top.toFixed(1)}px`;
+    this.box.style.height = `${product.offsetHeight}px`;
+    region.style.setProperty("--product-box-top", `${top.toFixed(1)}px`);
+  }
+
+  hoverEnabled() { return isFrame() && !this.coarse && !isReduced(); }
+
+  bindEvents() {
+    const area = this.hoverArea;
+    area.addEventListener("pointermove", (event) => {
+      if (event.pointerType !== "mouse") return;
+      const rect = this.box.getBoundingClientRect();
+      this.hover.nx = clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1);
+      this.hover.ny = clamp(((event.clientY - rect.top) / rect.height) * 2 - 1, -1, 1);
+    }, { passive: true });
+    if (this.mode === "journey" && this.coarse) {
+      const product = document.getElementById("hero-product");
+      product.style.touchAction = "pan-y";
+      product.style.pointerEvents = "auto";
+      product.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse") return;
+        this.drag = { x: event.clientX }; this.spinVelocity = 0;
+        product.setPointerCapture(event.pointerId);
+      });
+      product.addEventListener("pointermove", (event) => {
+        if (!this.drag) return;
+        const dx = event.clientX - this.drag.x; this.drag.x = event.clientX;
+        this.spinVelocity = dx * DRAG_DEGREES_PER_PX; this.spin += this.spinVelocity;
+      });
+      const release = () => { this.drag = null; };
+      product.addEventListener("pointerup", release);
+      product.addEventListener("pointercancel", release);
+    }
+    let resizeTimer = null;
+    const relayout = () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => this.layout(), 150); };
+    addEventListener(this.coarse ? "orientationchange" : "resize", relayout);
+    A.frameQuery.addEventListener("change", relayout);
+    if (this.mode === "journey") new ResizeObserver(relayout).observe(document.getElementById("hero-product"));
+    document.addEventListener("visibilitychange", () => this.updateSubscription());
+  }
+
+  observe() {
+    new IntersectionObserver((entries) => {
+      this.visible = entries.some((e) => e.isIntersecting);
+      this.updateSubscription();
+    }, { rootMargin: "10%" }).observe(this.mode === "journey" ? document.getElementById("product-region") : this.section);
+  }
+  updateSubscription() {
+    const shouldRun = this.visible && !document.hidden && this.ready;
+    if (shouldRun && !this.unsub) this.subscribe();
+    if (!shouldRun && this.unsub) { this.unsub(); this.unsub = null; this.lastTime = null; }
+  }
+  subscribe() {
+    if (this.unsub || !this.ready) return;
+    this.unsub = ticker.add((time) => this.frame(time), () => FRAME_BUDGET[this.tier]);
+  }
+
+  readScroll() {
+    if (this.mode === "journey") {
+      const rect = this.section.getBoundingClientRect();
+      const next = isFrame() ? clamp(-rect.top / this.section.offsetHeight, 0, 1) : 0;
+      if (next !== this.journey) this.needsFrame = true;
+      this.journey = next;
+      if (isFrame()) {
+        const stage = this.box.getBoundingClientRect();
+        const stickyTop = (innerHeight - stage.height) / 2;
+        this.released = Math.max(0, stickyTop - stage.top);
+        this.lagPx = this.cssHeight * RELEASE_LAG;
+      } else { this.released = 0; }
+    } else {
+      const rect = this.section.getBoundingClientRect();
+      const t = (innerHeight - rect.top) / innerHeight;
+      const next = clamp((t + 0.55) / 0.85, 0, 1);
+      if (next !== this.approach) this.needsFrame = true;
+      this.approach = next;
+    }
+  }
+
+  physics(dt) {
+    this.accumulator = Math.min(this.accumulator + dt, PHYSICS_STEP_MS * MAX_PHYSICS_STEPS);
+    let steps = 0;
+    while (this.accumulator >= PHYSICS_STEP_MS && steps < MAX_PHYSICS_STEPS) {
+      this.accumulator -= PHYSICS_STEP_MS; steps++;
+      /* Authority is taken from the cursor while the page is travelling. */
+      const speed = Math.abs(this.journey - this.stepJourney); this.stepJourney = this.journey;
+      const muteTarget = 1 - clamp(speed / TRAVEL_MUTE_SPEED, 0, 1);
+      const tau = muteTarget < this.intensity ? TRAVEL_MUTE_MS : TRAVEL_SETTLE_MS;
+      this.intensity += (muteTarget - this.intensity) * (1 - Math.exp(-PHYSICS_STEP_MS / tau));
+      const active = this.hoverEnabled() ? smootherstep(this.intensity) : 0;
+      const nx = this.hover.nx * active, ny = this.hover.ny * active;
+      this.turn.step(nx * TURN_MAX); this.roll.step(ny * ROLL_MAX); this.tiltX.step(-ny * TILT_MAX_X);
+      this.px.step(nx * PARALLAX); this.py.step(-ny * PARALLAX);
+      /* The body follows the scroll on the same clock. */
+      const previousTurnBase = this.turnBaseValue;
+      if (this.mode === "journey") {
+        this.followed += (this.journey - this.followed) * JOURNEY_FOLLOW;
+        this.turnBaseValue = SCROLL_TURN * drift(this.followed);
+      } else {
+        this.followed = smootherstep(this.approach);
+        this.turnBaseValue = SCROLL_TURN + (1 - this.followed) * STILL.entrance.turn;
+      }
+      const journeyTurnVel = this.turnBaseValue - previousTurnBase;
+      if (!this.drag && this.spinVelocity !== 0) {
+        this.spin += this.spinVelocity; this.spinVelocity *= SPIN_FRICTION;
+        if (Math.abs(this.spinVelocity) < SPIN_STOP) this.spinVelocity = 0;
+      }
+      /* The sleeves trail the turn: three inputs, three gains, per-bone limit. */
+      if (this.bones.length && !isReduced()) {
+        const raw = (this.roll.velocity + this.turn.velocity * 0.6) * 7 + journeyTurnVel * 1.5 + this.spinVelocity * 0.63;
+        this.jiggleDrive += (raw - this.jiggleDrive) * JIGGLE_DRIVE_FOLLOW;
+        for (const item of this.bones) {
+          const rawTarget = -this.jiggleDrive * item.scale * (1 + item.depth * JIGGLE_DEPTH_GAIN);
+          const target = SLEEVE_LIMIT * Math.tanh(rawTarget / SLEEVE_LIMIT);
+          item.velocity = (item.velocity + (target - item.angle) * SLEEVE_STIFFNESS) * SLEEVE_DAMPING;
+          item.angle += item.velocity;
+          item.bone.quaternion.copy(item.rest).multiply(scratchQ.setFromAxisAngle(Z_AXIS, item.angle));
+        }
+      }
+    }
+  }
+
+  /* Place the product by projecting the artboard's own coordinates. */
+  place() {
+    const still = this.mode === "still";
+    const fullBleed = still || isFrame();
+    const scale = this.cssHeightRaw / FRAME_HEIGHT;
+    const halfTan = Math.tan((30 * DEG) / 2);
+    let heightUnits, riseUnits, shiftX;
+    if (still) {
+      heightUnits = STILL.height;
+      riseUnits = STILL.offsetY;
+      shiftX = STILL.offsetX + (1 - this.followed) * STILL.entrance.shiftX;
+    } else {
+      const d = drift(this.followed);
+      heightUnits = lerp(SUBJECT_HEIGHT, DETAILS_HEIGHT, d);
+      riseUnits = lerp(SUBJECT_RISE, -DETAILS_DROP, d);
+      shiftX = lerp(0, DETAILS_SHIFT_X, d);
+    }
+    const targetPx = fullBleed ? heightUnits * scale : this.cssHeight * BOXED_FILL_Y;
+    const forHeight = (this.modelSize.y * this.cssHeight) / (2 * targetPx * halfTan);
+    const forWidth = (this.modelSize.x * this.cssHeight) / (2 * this.cssWidth * BOXED_FILL_X * halfTan);
+    const distance = fullBleed ? forHeight : Math.max(forHeight, forWidth);
+    this.camera.position.set(0, 0, distance);
+    this.camera.lookAt(0, 0, 0);
+    const worldPerPixel = (2 * distance * halfTan) / this.cssHeight;
+    const idle = isReduced() ? 0 : Math.sin((this.elapsed / IDLE_PERIOD_S) * Math.PI * 2);
+    const releaseDrop = this.lagPx > 0 ? this.lagPx * (1 - Math.exp(-this.released / this.lagPx)) : 0;
+    let x, y;
+    if (fullBleed) {
+      x = (shiftX + this.px.value) * scale * worldPerPixel;
+      y = ((riseUnits + IDLE_RISE * idle + this.py.value) * scale - releaseDrop) * worldPerPixel;
+    } else {
+      x = this.px.value * scale * worldPerPixel;
+      y = (-BOXED_DROP * this.cssHeight + IDLE_RISE * idle * scale) * worldPerPixel;
+    }
+    this.rollGroup.position.set(x, y, 0);
+    this.rollGroup.rotation.z = this.roll.value;
+    this.turnGroup.rotation.set(this.tiltX.value, this.turnBaseValue + this.turn.value + IDLE_ROTATION * idle + this.spin, 0);
+  }
+
+  frame(time) {
+    const dt = this.lastTime === null ? PHYSICS_STEP_MS : Math.min(64, time - this.lastTime);
+    this.lastTime = time;
+    this.elapsed += dt / 1000;
+    this.readScroll();
+    this.physics(dt);
+    this.place();
+    if (this.needsFrame || !isReduced() || this.spinVelocity !== 0) {
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
+      this.needsFrame = false;
+    }
+    this.measureFps(time);
+  }
+
+  /* Below the floor, step down the pixel ratio — never the physics. */
+  measureFps(time) {
+    const f = this.fps;
+    if (!f.since) { f.since = time; f.frames = 0; return; }
+    f.frames++;
+    if (time - f.since < FPS_WINDOW_MS) return;
+    const fps = (f.frames * 1000) / (time - f.since);
+    f.since = time; f.frames = 0;
+    f.bad = fps < FPS_FLOOR ? f.bad + 1 : 0;
+    if (f.bad >= 2 && this.ratioIndex < RATIO_STEPS[this.tier].length - 1) {
+      this.ratioIndex++; f.bad = 0; this.layout();
+    }
+  }
+}
+
+/* ── The two instances ───────────────────────────────────────────────────── */
+const heroScene = new ProductScene({
+  box: document.getElementById("hero-stage"),
+  canvas: document.getElementById("hero-canvas"),
+  section: document.getElementById("hero"),
+  hoverArea: document.getElementById("product-region"),
+  mode: "journey",
+});
+heroScene.init();
+
+let faqScene = null;
+const buildFaqScene = () => {
+  if (faqScene || !isFrame()) return;
+  faqScene = new ProductScene({
+    box: document.getElementById("faq-stage"),
+    canvas: document.getElementById("faq-canvas"),
+    section: document.getElementById("faq"),
+    hoverArea: document.getElementById("faq"),
+    mode: "still",
+  });
+  faqScene.init();
+};
+buildFaqScene();
+A.frameQuery.addEventListener("change", buildFaqScene);
+</script>
+</body>
+</html>
