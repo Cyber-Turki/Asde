@@ -1,6 +1,6 @@
 ---
 tags: [moc, home]
-updated: 2026-07-24
+updated: 2026-09-24
 ---
 
 # 🧠 next16-claude-starter — Project Brain
@@ -31,6 +31,7 @@ humans and AI agents (Claude Code, Cursor).
 ### 02 — Frontend
 - [[routing]] — App Router conventions, route → view delegation
 - [[design-system]] — Tailwind v4 tokens, CSS layers, styling rules
+- [[design-reference]] — the vendored `ai-design-vault`: how its layout, typography, colour, spacing and motion judgement applies here
 - [[animation-system]] — the spring component library (the core of this starter)
 - [[text-engine]] — `spring-text-engine` usage summary & project rules
 - [[text-engine-reference]] — full `spring-text-engine` API reference

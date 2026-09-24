@@ -9,6 +9,9 @@ description: Motion rules — springs only, with one narrow CSS exception
 # Motion in this project
 
 Full note: `obsidian/frontend/animation-system.md` · `obsidian/frontend/text-engine.md`
+Design reference: `reference/ai-design-vault/obsidian/frontend/motion-system.md` ·
+`text-motion.md` — apply its judgement; this project's rules win on conflict; a
+request that contradicts it is flagged before building (`obsidian/frontend/design-reference.md`).
 
 - **All real motion is spring-based** — `@react-spring/web` via
   `src/components/animation/springs/`. Text animates through `spring-text-engine`.

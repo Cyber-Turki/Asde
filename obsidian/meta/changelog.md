@@ -37,6 +37,26 @@ there ([[new-page]]).
 
 <!-- Log this project's changes below, newest first, under a `## YYYY-MM-DD` heading. -->
 
+## 2026-09-24 — `ai-design-vault` vendored as the design reference
+
+- **New top-level `reference/`** holding Textura's stack-agnostic
+  [`ai-design-vault`](https://github.com/textura-agency/ai-design-vault) at
+  commit `f0cdc2b` (2026-08-18) — its `obsidian/`, `README.md`, `AGENTS.md` and
+  `LICENSE.md` only. Its `.claude/`, `install.sh`, `CLAUDE.md` and `.cursorrules`
+  were **not** installed and its `/adapt` was not run: the app keeps this
+  starter's harness and vault. ADR-0026.
+- **New note [[design-reference]]** — which reference note to read for layout,
+  typography, colour, spacing and motion, the precedence order when it and this
+  vault differ, the ADR number mapping, and the rule that a request contradicting
+  the reference is flagged before it is built.
+- Registered in [[README]], [[ai-agent-guide]] (a "Design reference" section and
+  a "Where to look" row), [[folder-structure]], the root `AGENTS.md`, and the
+  path-scoped rules `motion.md` and `design-tokens.md`, so the pointer loads
+  whenever a UI or token file is read.
+- **No code or dependency changes.** `reference/` is outside the Tailwind
+  `source("../")` scan, holds no TypeScript for `tsconfig` to pick up, and is
+  not linted.
+
 ## 2026-09-24 — Project initialised from `next16-claude-starter`
 
 - **Fresh project** created from the upstream starter

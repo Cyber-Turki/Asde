@@ -8,6 +8,9 @@ description: The three-tier design token convention
 # Design tokens — three tiers, no skipping
 
 Full note: `obsidian/frontend/design-system.md` (ADR-0015)
+Design reference: `reference/ai-design-vault/obsidian/frontend/design-system.md` —
+apply its judgement; this project's rules win on conflict; a request that
+contradicts it is flagged before building (`obsidian/frontend/design-reference.md`).
 
 | Tier | Grammar | Lives in | Usable in markup |
 |------|---------|----------|------------------|

@@ -1,6 +1,6 @@
 ---
 tags: [meta, decision]
-updated: 2026-09-18
+updated: 2026-09-24
 ---
 
 # Decisions Log (ADRs)
@@ -16,6 +16,42 @@ fine; write a new ADR that says so rather than editing the old one.
 Template: [[templates/adr-note]].
 
 ---
+
+## ADR-0026 — `ai-design-vault` is vendored as a design reference, not installed
+
+**Status:** Accepted · 2026-09-24
+
+**Context.** Textura's [`ai-design-vault`](https://github.com/textura-agency/ai-design-vault)
+is the framework-agnostic sibling of this starter: the same conventions written
+without a framework, plus its own harness (`.claude/`, `stack.json`, `/adapt`).
+Its default install copies that harness and its vault over a project's root —
+which here would overwrite this starter's own harness and vault, both already
+fitted to Next 16. The ask was narrower: use its notes on layout, typography,
+colour, spacing and motion as a reference whenever UI is built or changed, and
+flag requests that contradict them.
+
+**Decision.** The vault is vendored **read-only** under `reference/ai-design-vault/`
+— its `obsidian/`, `README.md`, `AGENTS.md` and `LICENSE.md` at commit `f0cdc2b`
+— without its `.claude/`, `install.sh`, `CLAUDE.md` or `.cursorrules`. Its
+`/adapt` is never run. It lives outside `obsidian/` because the two vaults share
+note names and nesting would make wikilinks ambiguous. Precedence, in order:
+
+1. This vault's hard rules and stack specifics — Next 16, `@react-spring/web`,
+   `spring-text-engine`, Tailwind v4, the paths in [[folder-structure]].
+2. The reference's **judgement** wherever this vault is silent or thinner.
+3. The reference's file structure, harness, ADR numbering and "rule zero"
+   (`stack.json`) — **not adopted**.
+
+Where both say the same thing — most of it, since they share a lineage — this
+vault's note and ADR are the ones cited.
+
+**Consequences.** UI work reads the reference first; [[design-reference]] says
+which note for what and maps its ADR numbers onto this log's. A request that
+contradicts the reference is named as such before anything is built, with the
+compliant alternative offered; the user's explicit call then stands and is
+logged in [[changelog]]. `reference/` is documented in [[folder-structure]];
+nothing in the app, build, lint, Tailwind scan or hooks reads it. Updating the
+reference is a re-copy plus a changelog line.
 
 ## ADR-0025 — Load and runtime performance are separate skills
 

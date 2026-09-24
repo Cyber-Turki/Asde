@@ -23,6 +23,14 @@ single source of truth for how this project is built.
 
 Notes link each other with `[[wikilinks]]` — follow them to navigate.
 
+**Design reference.** `reference/ai-design-vault/` is Textura's stack-agnostic
+design vault, vendored read-only. Before building or changing UI, read its
+`README.md` (the map) and the note matching the work — layout, typography,
+colour, spacing, motion. Apply its judgement, not its file structure: this
+project's hard rules and stack win where they differ, and its `/adapt` and
+`.claude/` are not installed. If a request contradicts its notes, say so before
+building. Protocol: `obsidian/frontend/design-reference.md`.
+
 ## Hard rules (never violate)
 
 1. **All motion is spring-based** — `@react-spring/web` via the components in

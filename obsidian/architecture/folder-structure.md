@@ -1,6 +1,6 @@
 ---
 tags: [architecture, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Folder Structure
@@ -15,6 +15,7 @@ next16-claude-starter/
 ├── src/                     ← application code (see below)
 ├── public/                  ← static assets (see "public/" section below)
 ├── obsidian/                ← this Obsidian vault — ALL project documentation
+├── reference/               ← vendored third-party docs (ai-design-vault) — read-only, see [[design-reference]]
 ├── .claude/                 ← agent execution layer — see [[agent-harness]]
 │   ├── settings.json        ← hooks + permissions
 │   ├── scripts/verify.sh    ← mechanical hard-rule checks
@@ -35,6 +36,10 @@ All documentation lives in the vault. The root `AGENTS.md` / `CLAUDE.md` /
 see [[ai-agent-guide]]. `.claude/` holds the execution layer: hooks and
 permissions in `settings.json`, plus the commands, rules, skills, agents and the
 `verify.sh` check script — see [[agent-harness]].
+
+`reference/` holds vendored third-party documentation — today the
+`ai-design-vault` design reference. It is read, never executed: nothing in the
+app, the build, lint or the harness loads it. See [[design-reference]].
 
 ## `src/` — application code
 

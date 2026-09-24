@@ -1,6 +1,6 @@
 ---
 tags: [workflow, ai, stable]
-updated: 2026-09-18
+updated: 2026-09-24
 ---
 
 # AI Agent Guide
@@ -65,6 +65,18 @@ consistent with it.
    after any UI change. Zero FAILs, or say explicitly what you left and why.
    See [[qa-verification]].
 
+## Design reference
+
+`reference/ai-design-vault/` is Textura's stack-agnostic design vault, vendored
+**read-only** as a reference (ADR-0026). Before building or changing UI, read its
+`README.md` (the map) and the note matching the work — `design-system`,
+`motion-system`, `text-motion`, `new-page`, `generic-layout-prompt`. Apply its
+**judgement**, not its file structure: this vault's hard rules and stack
+specifics win wherever the two differ, and its `stack.json` / `/adapt` machinery
+is not installed here. **When a request contradicts its notes, say so before
+building** — name the note, state the conflict, offer the compliant alternative,
+and proceed only on the user's explicit call. Full protocol: [[design-reference]].
+
 ## Where to look
 
 | Question | Note |
@@ -74,6 +86,7 @@ consistent with it.
 | How do I add a page? | [[new-page]] |
 | How does animation work? | [[animation-system]], [[text-engine]] |
 | How do I style something? | [[design-system]] |
+| Layout, typography, colour, spacing or motion judgement | [[design-reference]] first, then the matching note here |
 | What components/hooks/utils exist? | [[components/animation-springs]], [[components/common]], [[hooks]], [[utils]] |
 | Lighthouse / Core Web Vitals / "get it in the green"? | [[optimize-load]] |
 | The site feels slow / janky / stutters on scroll? | [[optimize-performance]] |
