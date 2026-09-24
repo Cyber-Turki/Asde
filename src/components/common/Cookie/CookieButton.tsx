@@ -4,10 +4,9 @@
 import type { ReactNode } from "react";
 
 /**
- * Cookie-scoped button primitive. Two variants matching the project's
- * white/dark surfaces — replaces the external `SimpleButton` the component
- * shipped with. Hover states snap (the project bans CSS transitions; real
- * motion goes through @react-spring/web).
+ * Cookie-scoped button primitive. Two variants on the lattice surface: the
+ * filled primary action and a hairline secondary. Hover is a colour change,
+ * within the CSS-transition exception (ADR-0014).
  */
 export interface CookieButtonProps {
   children: ReactNode;
@@ -16,12 +15,13 @@ export interface CookieButtonProps {
 }
 
 const base =
-  "rounded-lg px-4 py-2 text-sm font-medium leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "px-4 py-2 text-caption font-medium leading-none transition-colors duration-[var(--duration-fast)] ease-entrance";
 
 const variants: Record<NonNullable<CookieButtonProps["variant"]>, string> = {
-  primary: "bg-foreground text-background hover:opacity-90",
+  primary:
+    "border border-action-primary bg-action-primary text-action-primary-content hover:border-action-primary-hover hover:bg-action-primary-hover",
   secondary:
-    "border border-foreground/15 bg-transparent text-foreground hover:bg-foreground/5",
+    "border border-rule bg-transparent text-foreground hover:border-rule-strong",
 };
 
 export const CookieButton = ({

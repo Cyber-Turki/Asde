@@ -53,7 +53,7 @@ export function generateMetadata({
       siteName,
       // Dimensions must match the real asset; 1200×630 is the ideal size.
       images: [{ url: ogImage, width: 900, height: 600 }],
-      locale: "en_US",
+      locale: siteConfig.locale,
       type: "website",
     },
     twitter: {

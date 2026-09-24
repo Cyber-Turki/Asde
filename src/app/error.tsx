@@ -19,15 +19,18 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 text-center">
-      <h1 className="text-3xl font-bold">Something went wrong</h1>
+    <main
+      id="main"
+      className="flex min-h-lvh flex-col items-center justify-center gap-4 px-gutter-compact text-center"
+    >
+      <h1 className="text-display-compact font-bold leading-headline">حدث خطأ ما</h1>
       <button
         type="button"
         onClick={reset}
-        className="underline underline-offset-4"
+        className="underline underline-offset-4 transition-colors duration-[var(--duration-fast)] ease-entrance hover:text-accent-hover"
       >
-        Try again
+        حاول مرة أخرى
       </button>
-    </div>
+    </main>
   );
 }

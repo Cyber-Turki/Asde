@@ -13,11 +13,17 @@
 
 import dynamic from "next/dynamic";
 
+import type { CookieCopy } from "@/data/mocks/cookie";
+
 const Cookie = dynamic(
   () => import("./Cookie").then((m) => ({ default: m.Cookie })),
   { ssr: false, loading: () => null },
 );
 
-export function LazyCookie() {
-  return <Cookie />;
+export interface LazyCookieProps {
+  copy: CookieCopy;
+}
+
+export function LazyCookie({ copy }: LazyCookieProps) {
+  return <Cookie copy={copy} />;
 }

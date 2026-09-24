@@ -4,10 +4,16 @@
 import Link from "next/link";
 import { animated, useTransition } from "@react-spring/web";
 
+import type { CookieCopy } from "@/data/mocks/cookie";
+
 import { CookieButton } from "./CookieButton";
 import { useCookieStore } from "./cookieStore";
 
-export const CookieBanner = () => {
+export interface CookieBannerProps {
+  copy: CookieCopy;
+}
+
+export const CookieBanner = ({ copy }: CookieBannerProps) => {
   const consent = useCookieStore((s) => s.consent);
   const hydrated = useCookieStore((s) => s.hydrated);
   const modalOpen = useCookieStore((s) => s.modalOpen);
@@ -31,41 +37,37 @@ export const CookieBanner = () => {
   return transitions((style, show) =>
     show ? (
       <animated.section
-        aria-label="Cookie consent"
+        aria-label={copy.banner.label}
         style={{
           opacity: style.opacity,
           transform: style.y.to((v) => `translateY(${v}px)`),
         }}
-        className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-background/95 p-5 font-sans text-foreground shadow-2xl backdrop-blur-xl sm:bottom-12 sm:left-auto sm:right-12 sm:w-[420px] sm:p-6"
+        className="lattice-bars fixed inset-x-4 bottom-4 z-50 flex flex-col gap-3 border border-rule p-5 font-sans text-foreground sm:inset-x-auto sm:bottom-12 sm:end-12 sm:w-drawer sm:p-6"
       >
-        <h2 className="text-base font-medium leading-snug sm:text-lg">
-          This website uses cookies
+        <h2 className="text-body font-medium leading-snug sm:text-lede">
+          {copy.banner.title}
         </h2>
-        <p className="text-sm leading-relaxed text-foreground/70">
-          We use cookies to keep the site working, learn how it&apos;s used, and
-          improve what we ship next. Accept everything, reject the non-essential,
-          or pick category by category. See our{" "}
+        <p className="text-caption leading-relaxed text-content-muted">
+          {copy.banner.body}{" "}
           <Link
-            href="/privacy-policy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-foreground/70"
+            href={copy.privacyHref}
+            className="underline underline-offset-2 transition-colors duration-[var(--duration-fast)] ease-entrance hover:text-foreground"
           >
-            privacy policy
+            {copy.privacyLabel}
           </Link>
           .
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <CookieButton onClick={acceptAll}>Accept all</CookieButton>
+          <CookieButton onClick={acceptAll}>{copy.acceptAllLabel}</CookieButton>
           <CookieButton variant="secondary" onClick={rejectAll}>
-            Reject all
+            {copy.rejectAllLabel}
           </CookieButton>
           <button
             type="button"
             onClick={openModal}
-            className="px-2 py-2 text-sm font-medium leading-none text-foreground underline underline-offset-2 hover:text-foreground/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+            className="px-2 py-2 text-caption font-medium leading-none text-foreground underline underline-offset-2 transition-colors duration-[var(--duration-fast)] ease-entrance hover:text-accent-hover"
           >
-            Manage preferences
+            {copy.banner.manageLabel}
           </button>
         </div>
       </animated.section>

@@ -3,6 +3,7 @@
    where documented class *patterns* like duration-[var(--duration-*)] parse as
    real candidates and emit CSS warnings. Docs are not a source of utilities. */
 @import "tailwindcss" source("../");
+@import "../style/index.css";
 
 /* ---------------------------------------------------------------------------
    TIER 1 — PRIMITIVES  (`--raw-*`)
@@ -12,43 +13,210 @@
    See obsidian/frontend/design-system.md → "Token naming convention".
    --------------------------------------------------------------------------- */
 :root {
+  /* Neutrals kept from the starter (used by the cookie banner). */
   --raw-color-white: #ffffff;
   --raw-color-neutral-100: #ededed;
   --raw-color-neutral-900: #171717;
   --raw-color-neutral-950: #0a0a0a;
 
+  /* Brand — Saudi identity (ADR-0027). The green is the national flag's
+     #006C35; the ground is that green driven almost to black so the lattice
+     reads as a dark green field; sand-gold carries the accents; ivory is type. */
+  --raw-color-ivory-100: #f4f1ea;
+  --raw-color-ivory-alpha-55: rgb(244 241 234 / 0.55);
+  --raw-color-ivory-alpha-30: rgb(244 241 234 / 0.3);
+  --raw-color-ivory-alpha-22: rgb(244 241 234 / 0.22);
+  --raw-color-ivory-alpha-10: rgb(244 241 234 / 0.1);
+  --raw-color-green-950: #030b08;
+  --raw-color-green-900: #071f15;
+  --raw-color-green-800: #0b3b25;
+  --raw-color-green-600: #006c35;
+  --raw-color-green-500: #0a8a48;
+  --raw-color-green-300: #5fd39a;
+  --raw-color-sand-400: #c8a24a;
+  --raw-color-sand-300: #e0c37a;
+
+  /* The pointer highlight in the lattice — ivory at five strengths. */
+  --raw-color-glow-core: rgb(244 241 234 / 0.07);
+  --raw-color-glow-mid: rgb(244 241 234 / 0.034);
+  --raw-color-glow-soft: rgb(244 241 234 / 0.012);
+  --raw-color-glow-halo: rgb(244 241 234 / 0.016);
+  --raw-color-glow-lag: rgb(244 241 234 / 0.03);
+
+  /* Device art (inline SVG renders of the products). */
+  --raw-color-titanium-800: #2a2a2c;
+  --raw-color-titanium-500: #6f6b66;
+  --raw-color-titanium-300: #b8b2a9;
+  --raw-color-screen-start: #0e5a34;
+  --raw-color-screen-end: #031b10;
+  --raw-color-glass: rgb(255 255 255 / 0.08);
+
   --raw-duration-fast: 150ms;
   --raw-duration-normal: 250ms;
+
+  /* Type ramp — rem against the 1440 artboard (16px root). */
+  --raw-size-caption: 0.8125rem;
+  --raw-size-body: 1.0625rem;
+  --raw-size-lede: 1.25rem;
+  --raw-size-title: 1.625rem;
+  --raw-size-display: 4rem;
+  --raw-size-display-compact: 2.5rem;
+  --raw-size-plate: 26rem;
+  --raw-size-plate-compact: 8rem;
+
+  /* Lattice geometry — a 10-unit pitch with a 2-unit hairline. */
+  --raw-length-lattice-pitch: 0.625rem;
+  --raw-length-lattice-gap: 0.125rem;
+  --raw-length-lattice-reach: 12rem;
+  --raw-length-offscreen-x: -100vw;
+  --raw-length-offscreen-y: -100vh;
+
+  /* Layout — the 40-unit page margin, the 800-unit artboard screen, controls. */
+  --raw-length-gutter: 2.5rem;
+  --raw-length-gutter-compact: 1.25rem;
+  --raw-length-artboard: 50rem;
+  --raw-length-header: 5rem;
+  --raw-length-panel: 1rem;
+  --raw-length-control: 2.875rem;
+  --raw-length-tap: 2.75rem;
+  --raw-length-ring: 2px;
+  --raw-length-hairline: 1px;
+
+  /* Composition measures from the 1440×800 artboard the sections are drawn
+     on — column widths, the screen's top inset, card and row heights. */
+  --raw-length-screen-top: 7.625rem;
+  --raw-length-column-narrow: 21.5rem;
+  --raw-length-column-wide: 26.0625rem;
+  --raw-length-column-lede: 17.8125rem;
+  --raw-length-column-faq: 42.125rem;
+  --raw-length-statement: 11.5625rem;
+  --raw-length-corner-card: 16.4375rem;
+  --raw-length-claim-bottom: 7.375rem;
+  --raw-length-card-height: 27.875rem;
+  --raw-length-card-title: 13.5625rem;
+  --raw-length-faq-row: 7.125rem;
+  --raw-length-faq-term: 12.1875rem;
+  --raw-length-drawer: 26rem;
+  --raw-length-newsletter: 15.3125rem;
+  --raw-length-product-hero: 62%;
+  --raw-length-product-mobile: 20rem;
+  --raw-length-perspective: 60rem;
+  --raw-length-layer-depth: 2.5rem;
+  --raw-length-thumb: 4rem;
 }
 
 /* ---------------------------------------------------------------------------
    TIER 2 — SEMANTIC  (role names, no namespace prefix)
    Purpose, not appearance. Always `var(--raw-*)` — never a literal.
-   This is the themeable layer: dark mode overrides happen HERE, which is why
-   these are separate from the @theme bindings below (see the note there).
+   This is the themeable layer. The store ships ONE theme by design — the
+   dark green lattice is the brand (ADR-0027) — so there is no
+   prefers-color-scheme override; a light theme would be added here.
    Grammar: --<role>[-<variant>][-<state>]
    --------------------------------------------------------------------------- */
 :root {
-  --background: var(--raw-color-white);
-  --foreground: var(--raw-color-neutral-900);
+  --background: var(--raw-color-green-900);
+  --foreground: var(--raw-color-ivory-100);
+  --surface-line: var(--raw-color-green-950);
+  --surface-raised: var(--raw-color-green-800);
+
+  --content-muted: var(--raw-color-ivory-alpha-55);
+  --content-faint: var(--raw-color-ivory-alpha-30);
+
+  --rule: var(--raw-color-ivory-alpha-22);
+  --rule-soft: var(--raw-color-ivory-alpha-10);
+  --rule-strong: var(--raw-color-ivory-100);
+
+  --action-primary: var(--raw-color-green-600);
+  --action-primary-hover: var(--raw-color-green-500);
+  --action-primary-content: var(--raw-color-ivory-100);
+  --accent: var(--raw-color-sand-400);
+  --accent-hover: var(--raw-color-sand-300);
+  --focus-ring: var(--raw-color-green-300);
+
+  --glow-core: var(--raw-color-glow-core);
+  --glow-mid: var(--raw-color-glow-mid);
+  --glow-soft: var(--raw-color-glow-soft);
+  --glow-halo: var(--raw-color-glow-halo);
+  --glow-lag: var(--raw-color-glow-lag);
+
+  --device-body: var(--raw-color-titanium-800);
+  --device-frame: var(--raw-color-titanium-500);
+  --device-frame-light: var(--raw-color-titanium-300);
+  --device-screen-start: var(--raw-color-screen-start);
+  --device-screen-end: var(--raw-color-screen-end);
+  --device-glass: var(--raw-color-glass);
 
   --duration-fast: var(--raw-duration-fast);
   --duration-normal: var(--raw-duration-normal);
+
+  --type-caption: var(--raw-size-caption);
+  --type-body: var(--raw-size-body);
+  --type-lede: var(--raw-size-lede);
+  --type-title: var(--raw-size-title);
+  --type-display: var(--raw-size-display);
+  --type-display-compact: var(--raw-size-display-compact);
+  --type-plate: var(--raw-size-plate);
+  --type-plate-compact: var(--raw-size-plate-compact);
+
+  --lattice-pitch: var(--raw-length-lattice-pitch);
+  --lattice-gap: var(--raw-length-lattice-gap);
+  --lattice-offset: calc(var(--lattice-gap) / -2);
+  --lattice-reach: var(--raw-length-lattice-reach);
+
+  /* Pointer field — written by <LatticeGround> on the shared ticker. Parked
+     off-screen so nothing is lit before the pointer has been seen. */
+  --pointer-x: var(--raw-length-offscreen-x);
+  --pointer-y: var(--raw-length-offscreen-y);
+  --pointer-lag-x: var(--raw-length-offscreen-x);
+  --pointer-lag-y: var(--raw-length-offscreen-y);
+
+  --gutter: var(--raw-length-gutter);
+  --gutter-compact: var(--raw-length-gutter-compact);
+  --artboard: var(--raw-length-artboard);
+  --header: var(--raw-length-header);
+  --panel: var(--raw-length-panel);
+  --control: var(--raw-length-control);
+  --tap: var(--raw-length-tap);
+  --ring: var(--raw-length-ring);
+  --hairline: var(--raw-length-hairline);
+
+  --screen-top: var(--raw-length-screen-top);
+  --column-narrow: var(--raw-length-column-narrow);
+  --column-wide: var(--raw-length-column-wide);
+  --column-lede: var(--raw-length-column-lede);
+  --column-faq: var(--raw-length-column-faq);
+  --statement: var(--raw-length-statement);
+  --corner-card: var(--raw-length-corner-card);
+  --claim-bottom: var(--raw-length-claim-bottom);
+  --card-height: var(--raw-length-card-height);
+  --card-title: var(--raw-length-card-title);
+  --faq-row: var(--raw-length-faq-row);
+  --faq-term: var(--raw-length-faq-term);
+  --drawer: var(--raw-length-drawer);
+  --newsletter: var(--raw-length-newsletter);
+  --product-hero: var(--raw-length-product-hero);
+  --product-mobile: var(--raw-length-product-mobile);
+  --perspective-card: var(--raw-length-perspective);
+  --layer-depth: var(--raw-length-layer-depth);
+  --thumb: var(--raw-length-thumb);
 }
 
-@media (prefers-color-scheme: dark) {
+/* The lattice must land on whole device pixels or the fractional pitch
+   antialiases on a three-cell beat and ripples when anything moves. */
+@supports (width: round(1px, 1px)) {
   :root {
-    --background: var(--raw-color-neutral-950);
-    --foreground: var(--raw-color-neutral-100);
+    --lattice-pitch: round(var(--raw-length-lattice-pitch), 1px);
+    --lattice-gap: round(var(--raw-length-lattice-gap), 1px);
+    --lattice-offset: round(calc(var(--lattice-gap) / -2), 1px);
   }
 }
 
 /* ---------------------------------------------------------------------------
    THEME BINDINGS — map semantic tokens into Tailwind namespaces.
    Every entry is exactly `--<tw-namespace>-<role>: var(--<role>)`.
-   `inline` is required: it inlines the var() into each utility, so the
-   dark-mode overrides on the Tier 2 tokens above cascade. Binding a literal
-   here instead would freeze the value and break theming.
+   `inline` is required: it inlines the var() into each utility, so any
+   override of a Tier 2 token cascades. Binding a literal here instead would
+   freeze the value and break theming.
 
    Only these namespaces generate utilities (verified against tailwindcss
    v4.3.3): --color-* --spacing-* --radius-* --leading-* --tracking-* --text-*
@@ -59,24 +227,72 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-onest);
+  --color-surface-line: var(--surface-line);
+  --color-surface-raised: var(--surface-raised);
+  --color-content-muted: var(--content-muted);
+  --color-content-faint: var(--content-faint);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-rule-strong: var(--rule-strong);
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-hover: var(--action-primary-hover);
+  --color-action-primary-content: var(--action-primary-content);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-focus-ring: var(--focus-ring);
+  --color-device-body: var(--device-body);
+  --color-device-frame: var(--device-frame);
+  --color-device-frame-light: var(--device-frame-light);
+  --color-device-screen-start: var(--device-screen-start);
+  --color-device-screen-end: var(--device-screen-end);
+  --color-device-glass: var(--device-glass);
+
+  --font-sans: var(--font-arabic);
+
+  --text-caption: var(--type-caption);
+  --text-body: var(--type-body);
+  --text-lede: var(--type-lede);
+  --text-title: var(--type-title);
+  --text-display: var(--type-display);
+  --text-display-compact: var(--type-display-compact);
+  --text-plate: var(--type-plate);
+  --text-plate-compact: var(--type-plate-compact);
+
+  --spacing-gutter: var(--gutter);
+  --spacing-gutter-compact: var(--gutter-compact);
+  --spacing-artboard: var(--artboard);
+  --spacing-header: var(--header);
+  --spacing-panel: var(--panel);
+  --spacing-control: var(--control);
+  --spacing-tap: var(--tap);
+  --spacing-hairline: var(--hairline);
+  --spacing-screen-top: var(--screen-top);
+  --spacing-column-narrow: var(--column-narrow);
+  --spacing-column-wide: var(--column-wide);
+  --spacing-column-lede: var(--column-lede);
+  --spacing-column-faq: var(--column-faq);
+  --spacing-statement: var(--statement);
+  --spacing-corner-card: var(--corner-card);
+  --spacing-claim-bottom: var(--claim-bottom);
+  --spacing-card-height: var(--card-height);
+  --spacing-card-title: var(--card-title);
+  --spacing-faq-row: var(--faq-row);
+  --spacing-faq-term: var(--faq-term);
+  --spacing-drawer: var(--drawer);
+  --spacing-newsletter: var(--newsletter);
+  --spacing-product-hero: var(--product-hero);
+  --spacing-product-mobile: var(--product-mobile);
+  --spacing-layer-depth: var(--layer-depth);
+  --spacing-thumb: var(--thumb);
 
   /* Leading floor for clipped TextEngine reveals — see
-     obsidian/frontend/text-engine.md → "Alignment & line-height". */
+     obsidian/frontend/text-engine.md → "Alignment & line-height". Arabic
+     display type needs the looser `headline`; prose the looser `prose`. */
   --leading-display: 1.1;
+  --leading-headline: 1.3;
+  --leading-prose: 1.75;
 
   --ease-entrance: cubic-bezier(0.2, 0, 0, 1);
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  width: 100vw;
 }
 
 @layer base {
@@ -88,6 +304,7 @@ body {
      Keep in sync with src/components/common/grid/grid.config.ts. */
   html {
     font-size: 16px;
+    background-color: var(--surface-line);
   }
 
   @media (max-width: 1920px) {
@@ -112,6 +329,30 @@ body {
     html {
       font-size: 4.444444vw; /* 16 * 100 / 360 */
     }
+  }
+
+  /* `overflow-x: clip`, not hidden — hidden would make <body> a scroll
+     container and break the sticky header and the sticky product stage. */
+  body {
+    position: relative;
+    isolation: isolate;
+    min-height: 100lvh;
+    overflow-x: clip;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-size: var(--type-body);
+    line-height: var(--leading-prose);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--action-primary);
+    color: var(--action-primary-content);
+  }
+
+  :focus-visible {
+    outline: var(--ring) solid var(--focus-ring);
+    outline-offset: var(--ring);
   }
 }
 
