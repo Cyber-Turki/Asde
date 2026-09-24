@@ -1,6 +1,6 @@
 ---
 tags: [frontend, animation, stable]
-updated: 2026-07-17
+updated: 2026-09-24
 ---
 
 # Text Engine — `spring-text-engine`
@@ -126,6 +126,19 @@ with a matching negative margin on a wrap layer:
 ```tsx
 <TextEngine wrapWordClassName="py-[0.15em] -my-[0.15em]" overflow …>
 ```
+
+## Arabic — words, never letters; no clipping
+
+> [!important] Project rule (ADR-0027)
+> This site is Arabic. Arabic letters **join**, and a letter split renders every
+> word in its isolated forms — so `letterIn`/`letterOut` are never used here.
+> Animate **words** (`wordIn`/`wordOut`) or lines. And do not set `overflow`:
+> Arabic ascenders and descenders overrun a 1.3 line box, so clipped reveals
+> shave glyphs; a fade-up needs no clip. The shared components in
+> `src/components/ui/motion-text.tsx` (`<DisplayHeading>`, `<Lede>`) encode
+> this — reach for them before writing a raw `<TextEngine>`. When the engine's
+> flex container sits in a stretched grid cell, add `content-start` or wrapped
+> lines spread across the cell's height.
 
 ## Common patterns
 

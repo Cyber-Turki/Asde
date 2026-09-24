@@ -17,6 +17,64 @@ Template: [[templates/adr-note]].
 
 ---
 
+## ADR-0028 — Cart and orders live client-side until Payload + Supabase arrive
+
+**Status:** Accepted · 2026-09-24
+
+**Context.** The store needs a catalogue, a cart and a way to place an order
+before the CMS and database exist (ADR-0020 adds them per project). A small
+Saudi shop closes most sales on WhatsApp or the phone after a web order, so a
+payment step is not the first requirement.
+
+**Decision.** The catalogue is placeholder data in `src/data/mocks/store.ts`,
+typed by `src/types/store.ts`. The cart is a Zustand store persisted to
+`localStorage` (`khaleej-cart-v1`) with a `hydrated` flag so the header count
+never mismatches on hydration. Checkout posts to `POST /api/order`, which
+validates with zod, **re-prices every line from the catalogue** (the client's
+totals are never trusted), and returns an order number — no payment, no
+persistence. Prices are shelf prices including 15% VAT; the VAT share is
+derived at display time, never stored. Copy that crosses into a client
+component is serialisable — string templates filled by `fill()` — because
+functions cannot cross the server/client boundary.
+
+**Consequences.** When Payload + Supabase are wired, products and orders move
+to collections, `/api/order` writes the order and the cart store is unchanged.
+Until then an order exists only in the confirmation the customer receives.
+Any new copy object handed to a client component must stay plain data.
+
+## ADR-0027 — Saudi identity, Arabic RTL, and how the reference spec was adapted
+
+**Status:** Accepted · 2026-09-24
+
+**Context.** The brief: a smartphone store for Saudi Arabia, Arabic interface on
+phone and desktop, Saudi visual identity, 2026 riyal prices, built from a
+one-page reference spec written for a single HTML file — monospace type, a
+hand-written ticker, a random-glyph text decoder, a WebGL garment. Four things
+in that spec contradict this project: the packaging (no framework), the motion
+(CSS-driven, hand-rolled loops), letter-level text scrambling (Arabic letters
+join, so a split breaks every word), and the typeface (no Arabic).
+
+**Decision.** Build in the starter and keep the spec's **composition**: artboard
+screens, the lattice ground that brightens under the cursor, bracketed
+statements, opaque lattice panels, the bracketed CTA, the product's journey
+across two screens, tilt cards, a `<dl>` FAQ, a real newsletter form. Re-express
+its **motion** with the engine: `<SpringTrigger mode="scrub">` for the journey,
+`<Inview>` / `<Spring>` for reveals, spring loops for the idles, react-spring for
+the tilt, the shared ticker for the pointer field. Text goes through
+`spring-text-engine` at **word level with no clipping**. The devices are inline
+SVG renders coloured by tokens — there is no model and no photography, and a
+WebGL scene is not worth its cost for a store. One dark theme: the green-black
+lattice with sand-gold accents *is* the brand, so there is no
+`prefers-color-scheme` override. IBM Plex Sans Arabic via `next/font`. Western
+digits with a thousands separator and "ر.س" after the number, the Saudi shelf
+convention.
+
+**Consequences.** `<html lang="ar" dir="rtl">`; layout uses logical utilities
+(`start-*`, `ps-*`, `ms-*`); the "forward" arrow points left. Letter-level text
+motion stays off for Arabic. A light theme would be a Tier 2 override. When
+photography arrives, `<DeviceArt>` swaps for `next/image` per product. If a 3D
+scene is ever added, `optimize-3d-scene` applies (hard rule #14).
+
 ## ADR-0026 — `ai-design-vault` is vendored as a design reference, not installed
 
 **Status:** Accepted · 2026-09-24

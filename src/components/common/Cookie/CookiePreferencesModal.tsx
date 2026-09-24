@@ -5,42 +5,19 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { animated, useSpring, useTransition } from "@react-spring/web";
 
+import type { CookieCopy } from "@/data/mocks/cookie";
 import { useScroll } from "@/hooks/smooth-scroll/use-scroll";
 
 import { CookieButton } from "./CookieButton";
 import { useCookieStore } from "./cookieStore";
 
-type CategoryKey = "necessary" | "analytics" | "marketing";
-
-interface Category {
-  key: CategoryKey;
-  title: string;
-  body: string;
-  required?: boolean;
-}
-
-const CATEGORIES: Category[] = [
-  {
-    key: "necessary",
-    title: "Strictly necessary",
-    body: "Required for the site to work — sign-in, security, page navigation. These can't be turned off.",
-    required: true,
-  },
-  {
-    key: "analytics",
-    title: "Analytics",
-    body: "Anonymised usage stats so we know which pages help and which fall flat. No personal profile is built.",
-  },
-  {
-    key: "marketing",
-    title: "Marketing",
-    body: "Lets us measure ad performance and re-show content you didn't get to finish reading. Opt out anytime.",
-  },
-];
-
 const TITLE_ID = "cookie-preferences-title";
 
-export const CookiePreferencesModal = () => {
+export interface CookiePreferencesModalProps {
+  copy: CookieCopy;
+}
+
+export const CookiePreferencesModal = ({ copy }: CookiePreferencesModalProps) => {
   const open = useCookieStore((s) => s.modalOpen);
   const consent = useCookieStore((s) => s.consent);
   const closeModal = useCookieStore((s) => s.closeModal);
@@ -97,13 +74,13 @@ export const CookiePreferencesModal = () => {
   return transitions((style, isOpen) =>
     isOpen ? (
       <animated.div
-        className="fixed inset-0 z-[100] font-sans"
+        className="fixed inset-0 z-100 font-sans"
         style={{ opacity: style.opacity }}
       >
         <div
           aria-hidden
           onMouseDown={closeModal}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-surface-line/70"
         />
         <animated.div
           role="dialog"
@@ -112,17 +89,17 @@ export const CookiePreferencesModal = () => {
           style={{
             transform: style.scale.to((s) => `translate(-50%, -50%) scale(${s})`),
           }}
-          className="absolute left-1/2 top-1/2 flex max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[560px] flex-col gap-5 overflow-hidden rounded-xl border border-foreground/10 bg-background p-5 text-foreground shadow-2xl sm:p-7"
+          className="lattice-bars absolute left-1/2 top-1/2 flex max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-xl flex-col gap-5 overflow-hidden border border-rule p-5 text-foreground sm:p-7"
         >
           <header className="flex items-start justify-between gap-3">
-            <h2 id={TITLE_ID} className="text-xl font-medium leading-tight">
-              Cookie preferences
+            <h2 id={TITLE_ID} className="text-title font-medium leading-headline">
+              {copy.modal.title}
             </h2>
             <button
               type="button"
               onClick={closeModal}
-              aria-label="Close cookie preferences"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-foreground/10 text-foreground hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+              aria-label={copy.modal.closeLabel}
+              className="flex size-8 shrink-0 items-center justify-center border border-rule text-foreground transition-colors duration-[var(--duration-fast)] ease-entrance hover:border-rule-strong"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path
@@ -135,22 +112,19 @@ export const CookiePreferencesModal = () => {
             </button>
           </header>
 
-          <p className="text-sm leading-relaxed text-foreground/60">
-            Choose which categories of cookies we&apos;re allowed to use. You can
-            change this any time. See our{" "}
+          <p className="text-caption leading-relaxed text-content-muted">
+            {copy.modal.body}{" "}
             <Link
-              href="/privacy-policy"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={copy.privacyHref}
               className="text-foreground underline underline-offset-2"
             >
-              privacy policy
+              {copy.privacyLabel}
             </Link>
             .
           </p>
 
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto py-1">
-            {CATEGORIES.map((c) => {
+            {copy.modal.categories.map((c) => {
               const value =
                 c.key === "necessary"
                   ? true
@@ -166,11 +140,11 @@ export const CookiePreferencesModal = () => {
               return (
                 <div
                   key={c.key}
-                  className="flex items-start justify-between gap-4 rounded-[10px] border border-foreground/10 px-4 py-3.5"
+                  className="flex items-start justify-between gap-4 border border-rule px-4 py-3.5"
                 >
                   <div className="flex min-w-0 flex-col gap-1">
-                    <h3 className="text-sm font-medium leading-snug">{c.title}</h3>
-                    <p className="text-xs leading-relaxed text-foreground/60">
+                    <h3 className="text-body font-medium leading-snug">{c.title}</h3>
+                    <p className="text-caption leading-relaxed text-content-muted">
                       {c.body}
                     </p>
                   </div>
@@ -187,13 +161,13 @@ export const CookiePreferencesModal = () => {
 
           <footer className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CookieButton variant="secondary" onClick={rejectAll}>
-              Reject all
+              {copy.rejectAllLabel}
             </CookieButton>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
               <CookieButton variant="secondary" onClick={handleSave}>
-                Save preferences
+                {copy.modal.saveLabel}
               </CookieButton>
-              <CookieButton onClick={acceptAll}>Accept all</CookieButton>
+              <CookieButton onClick={acceptAll}>{copy.acceptAllLabel}</CookieButton>
             </div>
           </footer>
         </animated.div>
@@ -211,9 +185,16 @@ interface ToggleProps {
   label: string;
 }
 
+// The knob travels 20px along the track; in this RTL layout "on" is toward
+// the inline-end, which is leftward.
+const KNOB_TRAVEL_PX = -20;
+
 const Toggle = ({ on, disabled, onChange, label }: ToggleProps) => {
   // Knob slides on a spring — track colour snaps (a state change, not motion).
-  const knob = useSpring({ x: on ? 20 : 0, config: { tension: 320, friction: 26 } });
+  const knob = useSpring({
+    x: on ? KNOB_TRAVEL_PX : 0,
+    config: { tension: 320, friction: 26 },
+  });
 
   return (
     <button
@@ -224,13 +205,13 @@ const Toggle = ({ on, disabled, onChange, label }: ToggleProps) => {
       aria-disabled={disabled || undefined}
       disabled={disabled}
       onClick={onChange}
-      className={`relative h-6 w-11 shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${
-        on ? "bg-foreground" : "bg-foreground/15"
+      className={`relative h-6 w-11 shrink-0 rounded-full ${
+        on ? "bg-action-primary" : "bg-rule-soft"
       } ${disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"}`}
     >
       <animated.span
         style={{ transform: knob.x.to((v) => `translateX(${v}px)`) }}
-        className="absolute left-[3px] top-[3px] block h-[18px] w-[18px] rounded-full bg-background shadow"
+        className="absolute start-0.75 top-0.75 block size-4.5 rounded-full bg-foreground"
       />
     </button>
   );

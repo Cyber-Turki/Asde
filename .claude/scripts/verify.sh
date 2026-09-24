@@ -58,7 +58,7 @@ report FAIL "leading-none combined with overflow" \
 
 report FAIL "duration-fast / duration-normal used as a utility" \
   "Tailwind v4 has no --duration-* namespace — the class compiles to nothing. Use duration-[var(--duration-fast)]." \
-  "$(SRC '\bduration-(fast|normal)\b')"
+  "$(SRC '(^|[^-])duration-(fast|normal)\b' | grep -vE 'duration-\[var\(--duration-')"
 
 report WARN "CSS transition without token-backed timing (ADR-0014)" \
   "The narrow CSS-transition exception requires duration-[var(--duration-*)] and a token ease." \

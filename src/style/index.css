@@ -1,5 +1,197 @@
-/* @layer theme, base, components, utilities;
+/* Extra CSS layers imported by globals.css.
+   Everything here is a genuine CSS-only construct — pseudo-elements and
+   multi-layer backgrounds that utilities cannot express (ADR-0012). Tokens
+   only; the literals live in globals.css Tier 1. */
 
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities); */
+/* ── The lattice ground ─────────────────────────────────────────────────────
+   The page surface is two pseudo-elements on the shell, and the order is
+   load-bearing: the pointer highlight is painted FIRST (fixed, z -2) and the
+   opaque hairline bars are painted OVER it (absolute, z -1). The light only
+   survives inside the cells, so it reads as the grid brightening in squares
+   rather than a lamp shining across it. `isolation: isolate` on the shell
+   keeps the negative z-indices inside its own stacking context. */
+@layer components {
+  .lattice-ground::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        circle var(--lattice-reach) at var(--pointer-x) var(--pointer-y),
+        var(--glow-core) 0%,
+        var(--glow-mid) 45%,
+        var(--glow-soft) 78%,
+        transparent 100%
+      ),
+      radial-gradient(
+        circle calc(var(--lattice-reach) * 1.75) at var(--pointer-x)
+          var(--pointer-y),
+        var(--glow-halo) 0%,
+        transparent 100%
+      ),
+      radial-gradient(
+        circle calc(var(--lattice-reach) * 1.2) at var(--pointer-lag-x)
+          var(--pointer-lag-y),
+        var(--glow-lag) 0%,
+        transparent 100%
+      );
+  }
+
+  .lattice-ground::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        to right,
+        var(--surface-line) 0 var(--lattice-gap),
+        transparent var(--lattice-gap) var(--lattice-pitch)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        var(--surface-line) 0 var(--lattice-gap),
+        transparent var(--lattice-gap) var(--lattice-pitch)
+      );
+    background-position: var(--lattice-offset) var(--lattice-offset);
+  }
+
+  /* No pointer to follow on touch, and no moving light under reduced motion. */
+  @media (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .lattice-ground::before {
+      display: none;
+    }
+  }
+}
+
+/* ── Opaque lattice panel ───────────────────────────────────────────────────
+   Rows, cards, the header backdrop and the cart drawer sit on an opaque copy
+   of the surface: they knock out whatever runs behind them instead of being
+   transparent cards over it. Five layers, one attachment each — the highlight
+   layers are viewport-anchored so a panel lights up in phase with the page.
+   Never put this on an element that carries a transform: the transform
+   becomes the containing block and the fixed layers fall out of step. */
+@utility lattice-panel {
+  background-color: var(--background);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--surface-line) 0 var(--lattice-gap),
+      transparent var(--lattice-gap) var(--lattice-pitch)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--surface-line) 0 var(--lattice-gap),
+      transparent var(--lattice-gap) var(--lattice-pitch)
+    ),
+    radial-gradient(
+      circle var(--lattice-reach) at var(--pointer-x) var(--pointer-y),
+      var(--glow-core) 0%,
+      var(--glow-mid) 45%,
+      var(--glow-soft) 78%,
+      transparent 100%
+    ),
+    radial-gradient(
+      circle calc(var(--lattice-reach) * 1.75) at var(--pointer-x)
+        var(--pointer-y),
+      var(--glow-halo) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      circle calc(var(--lattice-reach) * 1.2) at var(--pointer-lag-x)
+        var(--pointer-lag-y),
+      var(--glow-lag) 0%,
+      transparent 100%
+    );
+  background-position:
+    var(--lattice-offset) var(--lattice-offset),
+    var(--lattice-offset) var(--lattice-offset),
+    0 0,
+    0 0,
+    0 0;
+  background-attachment: scroll, scroll, fixed, fixed, fixed;
+}
+
+/* ── Bars-only panel ────────────────────────────────────────────────────────
+   For surfaces that carry a transform (the cart drawer and the mobile menu
+   slide in): the transform would re-base the fixed highlight layers, so these
+   take the cells and bars only and no light. */
+@utility lattice-bars {
+  background-color: var(--background);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--surface-line) 0 var(--lattice-gap),
+      transparent var(--lattice-gap) var(--lattice-pitch)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--surface-line) 0 var(--lattice-gap),
+      transparent var(--lattice-gap) var(--lattice-pitch)
+    );
+  background-position: var(--lattice-offset) var(--lattice-offset);
+}
+
+/* ── Touch targets ──────────────────────────────────────────────────────────
+   The hit area grows and the drawing does not: an empty ::before stretched
+   past the element's own box, which the browser hit-tests and nobody sees. */
+@utility tap-area {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--tap) - 100%) / -2) calc(var(--panel) * -0.5);
+  }
+}
+
+/* ── Corner brackets ────────────────────────────────────────────────────────
+   The bracketed button: four small corner boxes that converge on the control
+   on hover / focus-visible. The label and box never fill — nothing on this
+   surface is filled except the primary action. */
+@utility bracket-corners {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: var(--lattice-pitch);
+    height: var(--lattice-pitch);
+    pointer-events: none;
+    opacity: 0;
+    border-color: var(--rule-strong);
+    border-style: solid;
+    border-width: 0;
+    transition-property: opacity, translate;
+    transition-duration: var(--duration-normal);
+    transition-timing-function: var(--ease-entrance);
+  }
+
+  &::before {
+    inset-inline-start: calc(var(--lattice-pitch) * -1.2);
+    top: calc(var(--lattice-pitch) * -1.2);
+    border-inline-start-width: var(--hairline);
+    border-top-width: var(--hairline);
+    translate: calc(var(--lattice-gap) * -2) calc(var(--lattice-gap) * -2);
+  }
+
+  &::after {
+    inset-inline-end: calc(var(--lattice-pitch) * -1.2);
+    bottom: calc(var(--lattice-pitch) * -1.2);
+    border-inline-end-width: var(--hairline);
+    border-bottom-width: var(--hairline);
+    translate: calc(var(--lattice-gap) * 2) calc(var(--lattice-gap) * 2);
+  }
+
+  &:hover::before,
+  &:hover::after,
+  &:focus-visible::before,
+  &:focus-visible::after {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

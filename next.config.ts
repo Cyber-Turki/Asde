@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
+  // The cookie banner links to `/privacy-policy`; the policy lives on the
+  // policies page.
+  async redirects() {
+    return [
+      { source: "/privacy-policy", destination: "/policies#privacy", permanent: true },
+    ];
+  },
+
   // React Compiler (automatic memoisation) is an opt-in performance win.
   // It requires the `babel-plugin-react-compiler` dev dependency and routes
   // the build through Babel — enable once installed:

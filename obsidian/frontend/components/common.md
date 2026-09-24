@@ -1,6 +1,6 @@
 ---
 tags: [frontend, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Catalog — Common Components
@@ -34,16 +34,23 @@ the banner shows only after hydration confirms `consent === null`. Persisted to
 `localStorage` under key `cookie-consent-v1`. Three categories: `necessary`
 (always on), `analytics`, `marketing`.
 
-**Styling & motion** — ported to the project stack: Tailwind v4 with the
-`background` / `foreground` design tokens (dark-mode adaptive, no hardcoded hex),
-and `@react-spring/web` for all motion — `useTransition` drives the banner and
-modal mount/unmount, `useSpring` drives the toggle knob. No CSS transitions.
-The modal locks scroll through the Lenis [[smooth-scroll|scroll store]]
-(`useScroll.stop()`), not `body` overflow.
+**Styling & motion** — on the lattice surface (`lattice-bars`, hairline
+borders, the primary/secondary `CookieButton`), and `@react-spring/web` for
+all motion — `useTransition` drives the banner and modal mount/unmount,
+`useSpring` drives the toggle knob (which travels toward the inline-end, so
+leftward on this RTL page). The modal locks scroll through the Lenis
+[[smooth-scroll|scroll store]] (`useScroll.stop()`), not `body` overflow.
 
-> [!note] `#todo`
-> The privacy-policy link points to `/privacy-policy` — that route does not exist
-> yet. Placeholder consent copy should be reviewed before launch.
+**Copy** — Arabic, from `src/data/mocks/cookie.ts`, passed as `copy` through
+`<LazyCookie copy>` → `<Cookie>` → banner and modal. The privacy link goes to
+`/policies#privacy` (and `/privacy-policy` redirects there).
+
+## JsonLd — `json-ld.tsx`
+
+`<JsonLd data>` renders a `<script type="application/ld+json">` with `<`
+escaped so a value can never close the tag early. Used by the root layout
+(site graph), the home view (FAQ) and product pages (Product, Breadcrumb) —
+see [[seo-metadata]].
 
 ## Grid — adaptive scaling (`grid/`)
 

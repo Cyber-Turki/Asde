@@ -1,6 +1,6 @@
 ---
 tags: [backend, api, stable]
-updated: 2026-07-17
+updated: 2026-09-24
 ---
 
 # API Architecture
@@ -87,10 +87,12 @@ Client Components that fetch after mount use `apiFetch` from
 envelope, throwing `ApiClientError` on failure. Render-time data is fetched in
 Server Components instead (no client request at all).
 
-## Example
+## Endpoints
 
-`app/api/contact/route.ts` — a contact/lead endpoint. Runs out of the box
-(logs server-side); set `CONTACT_ENDPOINT` to forward leads upstream.
+| Endpoint | File | What it does |
+|----------|------|--------------|
+| `POST /api/contact` | `app/api/contact/route.ts` | The starter's contact/lead example. Logs server-side; set `CONTACT_ENDPOINT` to forward upstream. |
+| `POST /api/order` | `app/api/order/route.ts` | Order submission. Validates name, a Saudi mobile (`^(\+966\|0)5\d{8}$`), city, address, optional note and the cart lines; **re-prices every line from the catalogue** and rejects unknown or out-of-stock slugs (`400 unknown_product`); returns `{ orderId, total, count }`. No payment and no persistence yet — the order is confirmed by phone or WhatsApp (ADR-0028). Wire Payload + Supabase here when they arrive. |
 
 ## Related
 

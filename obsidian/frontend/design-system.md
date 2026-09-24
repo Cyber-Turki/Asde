@@ -1,6 +1,6 @@
 ---
 tags: [frontend, design-system, stable]
-updated: 2026-07-17
+updated: 2026-09-24
 ---
 
 # Design System — Tailwind v4
@@ -135,20 +135,43 @@ every case (motion is spring-based, so there are no keyframes to co-locate).
 
 ## Current theme state
 
-The starter ships a **minimal** theme on purpose — the convention is the
-deliverable, not a palette. It defines:
+The store ships **one theme** — the Saudi identity decided in ADR-0027: a
+green-black lattice ground, ivory type, the flag's green for the primary
+action, sand-gold for accents. There is no `prefers-color-scheme` override; a
+light theme would be added as a Tier 2 override block.
 
-- **Tier 1:** a small neutral ramp (`--raw-color-white`, `--raw-color-neutral-100/900/950`)
-  and two durations (`--raw-duration-fast/normal`).
-- **Tier 2:** `--background`, `--foreground`, `--duration-fast`, `--duration-normal`,
-  with a dark-mode override via `@media (prefers-color-scheme: dark)`.
-- **Bindings:** `--color-background`, `--color-foreground`, `--font-sans`,
-  plus `--leading-display` (1.1 — the clip floor for [[text-engine]]) and
-  `--ease-entrance`.
+- **Tier 1:** the ivory/green/sand ramp (`--raw-color-green-950…300`,
+  `--raw-color-sand-400/300`, `--raw-color-ivory-100` plus alpha steps), the
+  glow strengths, the device-art colours, two durations, the type ramp
+  (`--raw-size-caption…display`), the lattice geometry, and the composition
+  measures from the 1440×800 artboard (`--raw-length-column-*`, `-card-*`,
+  `-faq-*` …).
+- **Tier 2:** `--background`, `--foreground`, `--surface-line`,
+  `--surface-raised`, `--content-muted/faint`, `--rule/-soft/-strong`,
+  `--action-primary(-hover/-content)`, `--accent(-hover)`, `--focus-ring`,
+  `--device-*`, `--glow-*`, `--type-*`, `--lattice-*`, the layout lengths
+  (`--gutter`, `--artboard`, `--header`, `--panel`, `--control`, `--tap`, …)
+  and the pointer field `--pointer-x/y`, `--pointer-lag-x/y` written at runtime
+  by `<LatticeGround>`.
+- **Bindings:** every colour as `--color-*`, the type ramp as `--text-*`, every
+  length as `--spacing-*` (so `h-control`, `p-panel`, `w-column-lede`,
+  `max-w-drawer` exist), `--font-sans` → `--font-arabic`, `--leading-display`
+  (1.1, the clip floor), `--leading-headline` (1.3) and `--leading-prose` (1.75)
+  for Arabic, `--ease-entrance`.
 
-There is deliberately **no brand palette**. Add one per project as
-`--raw-color-brand-*` primitives plus the semantic roles that name their purpose.
-The `@layer base/components/utilities` blocks are empty — fill them per project.
+### The lattice
+
+The page surface is two pseudo-elements on `<body class="lattice-ground">`
+(`src/style/index.css`): the pointer highlight painted first (fixed) and the
+opaque hairline bars painted over it (absolute), so the light survives only
+inside the cells and reads as the grid **brightening in squares**. Panels that
+must knock out the artwork behind them use the `lattice-panel` utility (five
+background layers, the highlight ones viewport-anchored). Anything that
+carries a transform — the cart drawer, the mobile menu — takes `lattice-bars`
+(cells and bars, no light), because a transform re-bases fixed backgrounds.
+`tap-area` grows a hit box without growing the drawing; `bracket-corners`
+draws the CTA's converging brackets. The lattice pitch is rounded to device
+pixels with `round()` where supported, or the cells ripple.
 
 ## Motion: springs first, CSS for trivial state
 
@@ -186,8 +209,14 @@ If you are reaching past this list, you want `<Hover>` — see
 
 ## Typography
 
-Font: **Onest** (`next/font/google`), bound to `--font-onest` → `--font-sans`.
-Loaded in `src/app/layout.tsx` and exposed on `<body>` as `--font-onest`.
+Font: **IBM Plex Sans Arabic** (`next/font/google`, weights 400–700, `arabic` +
+`latin` subsets), bound to `--font-arabic` → `--font-sans`. Loaded in
+`src/app/layout.tsx` and exposed on `<body>`. The page is `dir="rtl"`: use
+logical utilities (`start-*`, `end-*`, `ps-*`, `ms-*`, `text-start`) rather
+than `left`/`right`, and never letter-space Arabic. Sizes come from the
+`--text-*` ramp (`text-caption`, `text-body`, `text-lede`, `text-title`,
+`text-display`, `text-display-compact`); prose leading is `leading-prose`,
+display leading `leading-headline`.
 
 ## Styling rules
 
