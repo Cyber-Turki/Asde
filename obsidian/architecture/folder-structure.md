@@ -60,19 +60,28 @@ src/
 │   └── favicon.ico
 │
 ├── views/                  # Page-level components — one per route
-│   └── home.tsx            # HomeView (Server Component, empty — start here)
+│   ├── home.tsx            # HomeView — the five screens
+│   ├── products.tsx        # catalogue · product.tsx — one product
+│   └── cart.tsx · policies.tsx
 │
 ├── layouts/                # Reusable layout wrappers
 │   └── scroll-layout.tsx   # Lenis smooth-scroll wrapper
 │
 ├── components/
-│   ├── ui/                 # Design-system primitives (Button, Input…) — empty, add as needed
-│   ├── common/             # Shared infrastructure (Cookie, grid, ReducedMotion, Skeletons)
+│   ├── ui/                 # Design-system primitives — see [[components/ui]]
+│   ├── site/               # Header, footer, nav, cart drawer, lattice ground — [[components/store]]
+│   ├── store/              # Product card, device art, price, checkout — [[components/store]]
+│   ├── home/               # The home screens (hero, why-us, collections…) — [[components/store]]
+│   ├── common/             # Shared infrastructure (Cookie, grid, ReducedMotion, Skeletons, JsonLd)
 │   └── animation/springs/  # ⚠️ Animation engine — #do-not-modify
+│
+├── data/mocks/             # Placeholder content: catalogue, page copy, site chrome, cookie copy
 │
 ├── hooks/                  # Custom hooks, grouped by domain
 │   ├── animation/          # ⚠️ Animation hooks — #do-not-modify
 │   ├── smooth-scroll/      # useScroll Zustand store
+│   ├── store/              # useCart — the persisted cart
+│   ├── use-scroll-lock.ts
 │   └── use-window-size.ts
 │
 ├── lib/                    # Third-party client init / global config
@@ -85,10 +94,12 @@ src/
 ├── utils/                  # Pure utility functions (no side effects)
 │   ├── animation/coords.ts
 │   ├── seo/generate-page-metadata.ts · seo/structured-data.ts
+│   ├── format.ts           # SAR prices, VAT share, copy templates
 │   ├── is-bot.ts · lvh.ts · math.ts · scroll-to.ts
 │
 ├── types/                  # Shared TypeScript types
-│   └── springs.ts
+│   ├── springs.ts
+│   └── store.ts            # Product, Category, CartLine, CartTotals
 │
 └── style/                  # Extra CSS layers imported into globals.css
     └── index.css

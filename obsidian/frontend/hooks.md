@@ -1,6 +1,6 @@
 ---
 tags: [frontend, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Catalog — Hooks
@@ -28,12 +28,19 @@ components — don't call them directly unless extending the engine.
 |------|------|------|
 | `useScroll` | `use-scroll.ts` | Zustand store for Lenis + scroll state — see [[smooth-scroll]] |
 
+## `hooks/store/`
+
+| Hook | File | Role |
+|------|------|------|
+| `useCart` | `use-cart.ts` | Zustand cart persisted to `localStorage` (`khaleej-cart-v1`): `lines`, `isOpen`, `hydrated`, `add` / `setQuantity` / `remove` / `clear` / `open` / `close`. Only the lines persist; `hydrated` flips after the storage read so the header count and the drawer never mismatch on hydration. Selectors `selectLinesWithProducts` and `selectTotals` (count, VAT-inclusive total, VAT share, net). ADR-0028. |
+
 ## `hooks/` (root)
 
 | Hook | File | Role |
 |------|------|------|
 | `useWindowWidth` / `useWindowHeight` / `useWindowSize` | `use-window-size.ts` | SSR-safe window dimensions — all three share **one** debounced (300 ms) `resize` listener via a `useSyncExternalStore` store |
 | `useAdaptiveGrid` | `use-adaptive-grid.ts` | Scales the root `<html>` font-size up while the viewport exceeds `baseWidth` — powers `<AdaptiveGrid>`, see [[components/common]] |
+| `useScrollLock` | `use-scroll-lock.ts` | Locks page scroll while `true` through the Lenis [[smooth-scroll|scroll store]] — the way the cookie modal does — never by touching `body` overflow. Used by the cart drawer and the mobile menu. |
 
 > [!note] Shared render loop
 > Loop-based hooks (`useLoop`, `useResizeLoop`, `useLoopInView`, the trigger

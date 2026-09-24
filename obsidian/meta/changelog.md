@@ -37,6 +37,43 @@ there ([[new-page]]).
 
 <!-- Log this project's changes below, newest first, under a `## YYYY-MM-DD` heading. -->
 
+## 2026-09-24 — الخليج storefront built on the starter
+
+- **The home view is no longer empty.** Five screens adapted from a one-page
+  reference spec: the hero with the product journey stage, "لماذا الخليج؟"
+  feature rows, the collection, the categories, the FAQ — [[components/store]].
+- **New routes** `/products` (catalogue, `?category=`), `/products/[slug]`
+  (13 static product pages), `/cart` (checkout, `noindex`) and `/policies`;
+  `/privacy-policy` redirects to `/policies#privacy`. The sitemap lists them;
+  `robots.ts` disallows `/cart` and `/api/`. See [[routing]].
+- **Arabic, RTL, Saudi identity** — `<html lang="ar" dir="rtl">`, IBM Plex Sans
+  Arabic, a dark-green lattice ground with sand-gold accents, one theme
+  (ADR-0027). Brand palette, type ramp and composition measures added as tokens
+  in `globals.css`; the lattice, panel, tap-area and bracket utilities live in
+  `src/style/index.css`. See [[design-system]].
+- **Store domain** — `src/types/store.ts`; the mock catalogue
+  `src/data/mocks/store.ts` (13 products, indicative 2026 SAR prices, VAT
+  included); the persisted cart `useCart` (Zustand); `POST /api/order`
+  (ADR-0028). Copy modules are serialisable templates because they cross into
+  client components — `fill()` in `src/utils/format.ts`.
+- **New component folders** `components/ui`, `components/site`,
+  `components/store`, `components/home` — [[components/ui]], [[components/store]].
+- **Cookie consent localised** and moved onto the lattice surface; its copy
+  comes from `src/data/mocks/cookie.ts` through props.
+- **`verify.sh` fix** — the `duration-fast` check matched its own recommended
+  `duration-[var(--duration-fast)]` form. It now ignores the `--`-prefixed
+  variable and only flags the bare utility.
+- **Verified** — `verify.sh` 0 FAIL, `yarn lint` clean, `yarn build` 24 pages,
+  and a Playwright pass at 1440×800 and 390×844: no console errors, no
+  horizontal overflow at any scroll position, exactly one `h1` per route, the
+  add-to-cart → drawer → checkout flow working.
+- **Not the source of truth**: a Lovable prototype of the same brief was
+  generated alongside as a visual sandbox (see the session notes); this
+  repository is the product.
+- **Placeholders to replace before launch** — phone, WhatsApp, email, VAT and
+  CR numbers in `src/lib/site.ts`; social links in `src/data/mocks/site.ts`;
+  product photography (SVG renders stand in); `NEXT_PUBLIC_SITE_URL`.
+
 ## 2026-09-24 — `ai-design-vault` vendored as the design reference
 
 - **New top-level `reference/`** holding Textura's stack-agnostic

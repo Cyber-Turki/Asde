@@ -1,6 +1,6 @@
 ---
 tags: [architecture, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Tech Stack
@@ -31,6 +31,10 @@ Package name: `next16-claude-starter` · version `0.1.0` · private.
 Tailwind v4 is configured entirely in `src/app/globals.css` via `@theme inline`.
 See [[design-system]].
 
+**Font:** IBM Plex Sans Arabic through `next/font/google` (no package — fetched
+at build time and self-hosted), replacing the starter's Onest. The page is
+Arabic and RTL (ADR-0027).
+
 ## Animation (the heart of the starter)
 
 | Package | Version | Role |
@@ -46,7 +50,7 @@ No `framer-motion`, no CSS transitions/keyframes. See [[animation-system]] and
 | Package | Version | Role |
 |---------|---------|------|
 | `lenis` | `^1.3.26` | Smooth scrolling |
-| `zustand` | `^5.0.15` | Lightweight global state (scroll store) |
+| `zustand` | `^5.0.15` | Lightweight global state — the scroll store, the cookie store, and the persisted cart (`hooks/store/use-cart.ts`, ADR-0028) |
 | `resize-observer-polyfill` | `^1.5.1` | ResizeObserver fallback for animation hooks |
 | `zod` | `^4.4.3` | Schema validation — env (`src/env.ts`) + API payloads. See [[api-architecture]] |
 

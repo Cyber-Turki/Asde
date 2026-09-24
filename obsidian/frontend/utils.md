@@ -1,6 +1,6 @@
 ---
 tags: [frontend, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Catalog — Utilities
@@ -60,8 +60,25 @@ used internally by the scroll/animation system. Marked `@ts-nocheck`. `#do-not-m
 
 ## `seo/structured-data.ts`
 
-`getSiteStructuredData()` — builds the `Organization` + `WebSite` JSON-LD graph
-rendered by the root layout. See [[seo-metadata]].
+`getSiteStructuredData()` — the `Organization` (also typed `ElectronicsStore`,
+with address, phone, `areaServed` Saudi Arabia) + `WebSite` graph rendered by
+the root layout. `getFaqStructuredData(items)` → `FAQPage` (home),
+`getProductStructuredData(product)` → `Product` with a SAR `Offer`, and
+`getBreadcrumbStructuredData(items)` → `BreadcrumbList` (product pages). All
+render through `<JsonLd>` ([[components/common]]). See [[seo-metadata]].
+
+## `format.ts`
+
+Price and copy formatting for the Saudi market:
+
+| Export | Purpose |
+|--------|---------|
+| `formatSar(4999)` → `"4,999 ر.س"` | Western digits, thousands separator, the currency mark after the number — the bidi algorithm places it correctly in an RTL run |
+| `formatSarExact(1249.75)` | two decimals — instalments and the VAT line |
+| `instalmentOf(amount, parts = 4)` | one interest-free payment (Tabby / Tamara style) |
+| `vatShareOf(total)` | the 15% VAT share contained in a VAT-inclusive amount |
+| `fill(template, values)` | replaces `{name}` placeholders in copy — copy that crosses into a client component must be serialisable, so templates replace functions (ADR-0028) |
+| `padIndex(0)` → `"01"` | index numerals |
 
 ## Adding a util
 

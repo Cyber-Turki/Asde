@@ -1,6 +1,6 @@
 ---
 tags: [frontend, stable]
-updated: 2026-05-21
+updated: 2026-09-24
 ---
 
 # Routing
@@ -25,17 +25,33 @@ export default function Home() {
 }
 ```
 
-All layout and UI logic lives in `src/views/home.tsx` (`HomeView`). The view is
-a **Server Component**; isolate any client-only animation in a leaf component —
-see [[component-conventions]] hard rule #6. `HomeView` currently ships **empty**:
-if the project is empty and no other instructions are provided, start developing
-here on route `/` (see [[ai-agent-guide]] / [[new-page]]).
+All layout and UI logic lives in the view. Views are **Server Components**;
+client-only animation is isolated in leaf components — see
+[[component-conventions]] hard rule #6.
+
+A view may also export its route's metadata and static params, so the route
+file still imports **only** from `@/views/` (the `verify.sh` check greps
+single-line imports — keep them on one line):
+
+```tsx
+// src/app/products/[slug]/page.tsx
+import { ProductView, generateProductMetadata, productStaticParams } from "@/views/product";
+
+export const dynamicParams = false;
+export const generateStaticParams = productStaticParams;
+export const generateMetadata = generateProductMetadata;
+```
 
 ## Current routes
 
-| Route | File | View |
-|-------|------|------|
-| `/` | `src/app/page.tsx` | `views/home.tsx` → `HomeView` |
+| Route | File | View | Notes |
+|-------|------|------|-------|
+| `/` | `src/app/page.tsx` | `views/home.tsx` → `HomeView` | the five screens — [[components/store]] |
+| `/products` | `src/app/products/page.tsx` | `views/products.tsx` → `ProductsView` | `?category=iphone\|accessories\|smart-devices`; the route awaits `searchParams` and passes it down |
+| `/products/[slug]` | `src/app/products/[slug]/page.tsx` | `views/product.tsx` → `ProductView` | static per product; `dynamicParams = false` |
+| `/cart` | `src/app/cart/page.tsx` | `views/cart.tsx` → `CartView` | `noindex`; checkout |
+| `/policies` | `src/app/policies/page.tsx` | `views/policies.tsx` → `PoliciesView` | `#returns`, `#privacy`, `#terms`; `/privacy-policy` redirects here (`next.config.ts`) |
+| `/api/order` | `src/app/api/order/route.ts` | — | order submission — [[api-architecture]] |
 
 ## Special files
 

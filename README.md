@@ -1,13 +1,28 @@
-# next16-claude-starter
+# الخليج للهواتف والأجهزة الذكية
 
-A **Next.js 16 starter** for animation-heavy marketing & landing sites — built
-by [Textura](https://textura.agency) so that AI agents (Claude Code, Cursor)
-generate **clean, production-ready code on the first pass**.
+An Arabic, RTL storefront for a Saudi smartphone shop — iPhones, accessories
+and smart devices at 2026 riyal prices — built on Textura's
+[next16-claude-starter](https://github.com/textura-agency/next16-claude-starter).
 
 Every motion is spring-based (`@react-spring/web`), text animation runs through
 `spring-text-engine`, scrolling is smoothed with Lenis, styling is Tailwind
-v4, and a rem-based adaptive grid scales the design across every viewport.
+v4 on a three-tier token system, and a rem-based adaptive grid scales the
+design across every viewport. The documentation is the `obsidian/` vault —
+start at `obsidian/README.md`; what is on the page is in
+`obsidian/frontend/components/store.md`.
 
+```bash
+yarn install          # Node ≥ 20.19
+cp .env.example .env  # set NEXT_PUBLIC_SITE_URL for production
+yarn dev              # http://localhost:3000
+yarn lint && yarn build && .claude/scripts/verify.sh
+```
+
+---
+
+## About the starter this project is built from
+
+The sections below are the starter's own README, kept for reference.
 ---
 
 ## ⚡ Start in one prompt

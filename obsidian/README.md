@@ -3,16 +3,20 @@ tags: [moc, home]
 updated: 2026-09-24
 ---
 
-# 🧠 next16-claude-starter — Project Brain
+# 🧠 الخليج للهواتف والأجهزة الذكية — Project Brain
 
-This vault is the **single source of truth** for the `next16-claude-starter` project. It documents
+This vault is the **single source of truth** for this project. It documents
 how the project is built, why decisions were made, and how to extend it — for both
 humans and AI agents (Claude Code, Cursor).
 
 > [!info] What is this project?
-> `next16-claude-starter` (package name `next16-claude-starter`) is a **Next.js 16 starter template**
-> built by [Textura](https://textura.agency) for animation-heavy marketing & landing
-> sites. Every motion is spring-based; there is no backend yet.
+> **الخليج للهواتف والأجهزة الذكية** (Al Khaleej Phones & Smart Devices) — an
+> Arabic, RTL storefront for a Saudi smartphone shop: iPhones, accessories and
+> smart devices at 2026 riyal prices, with a persisted cart and a checkout that
+> closes the sale on WhatsApp. Built from Textura's `next16-claude-starter`
+> (package name still `next16-claude-starter`): every motion is spring-based,
+> there is no CMS or database yet (ADR-0028). Start at [[components/store]] for
+> what is on the page and [[decisions-log]] ADR-0027 for the identity.
 
 ## 🗺️ Map of Content
 
@@ -41,6 +45,8 @@ humans and AI agents (Claude Code, Cursor).
 - [[seo-metadata]] — metadata generation & bot detection
 - [[components/animation-springs|Spring components catalog]]
 - [[components/common|Common components catalog]]
+- [[components/ui|UI primitives catalog]] — bracket button, brand mark, icons, text motion, idles, tilt card
+- [[components/store|Site, store & home components catalog]] — chrome, cart, product card, the five screens, routes
 - [[hooks]] — custom hooks catalog
 - [[utils]] — utility functions catalog
 
